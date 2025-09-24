@@ -14,14 +14,26 @@
             flex-direction: column;
             align-items: center;
         }
-        #content {
+        #public-content, #restricted-content {
             display: none;
             margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
         }
         .user-info {
             margin-top: 20px;
             padding: 10px;
             border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .section-header {
+            width: 100%;
+            padding: 10px;
+            background-color: #f5f5f5;
+            margin-bottom: 15px;
             border-radius: 4px;
         }
     </style>
@@ -45,24 +57,87 @@
          data-logo_alignment="left">
     </div>
 
-    <!-- Content that will be shown after authentication -->
-    <div id="content">
-        <h2>Welcome, <span id="userName"></span>!</h2>
-        <div class="user-info">
-            <p>Email: <span id="userEmail"></span></p>
-            <button onclick="signOut()">Sign Out</button>
+    <!-- Public content (shown to all authenticated users) -->
+    <div id="public-content">
+        <div class="section-header">
+            <h2>Welcome, <span id="userName"></span>!</h2>
+            <div class="user-info">
+                <p>Email: <span id="userEmail"></span></p>
+                <button onclick="signOut()">Sign Out</button>
+            </div>
+        </div>
+        <h3>Public Section</h3>
+        <p>This content is visible to all authenticated users.</p>
+    </div>
+
+    <!-- Restricted content (shown only to authorized users) -->
+    <div id="restricted-content">
+        <div class="section-header">
+            <h3>Restricted Section</h3>
+            <p>This content is only visible to authorized users.</p>
+        </div>
+        <div id="restricted-data">
+            <!-- Add your restricted content here -->
+            <p>Welcome to the restricted area!</p>
         </div>
     </div>
 
     <script>
-        function handleCredentialResponse(response) {
+    /**
+     * ========================================
+     * HOW TO ADD AUTHORIZED USERS
+     * ========================================
+     * 1. Go to https://emn178.github.io/online-tools/sha256.html
+     * 2. Enter the email address in lowercase (e.g., "user@example.com")
+     * 3. Copy the generated hash
+     * 4. Add the hash to the _0x5f2d3c array below
+     * 
+     * Example:
+     * Email: test@example.com
+     * Hash: 973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b
+     * 
+     * Security Notes:
+     * - Keep email addresses lowercase when generating hashes
+     * - Each email will generate a unique hash
+     * - Hashes cannot be reversed back to email addresses
+     * - Store hashes securely and never share them
+     */
+        // Obfuscated authorized users list (emails are SHA-256 hashed)
+        const _0x5f2d3c = [
+            // Add your hashed email addresses here
+            '16e289e7ca17bbcb20480d2280172ecc666f827b9b9d73fbf4cf9484df33c80e', // Replace with your hashed emails
+            '16e289e7ca17bbcb20480d2280172ecc666f827b9b9d73fbf4cf9484df33c80e'  // Replace with your hashed emails
+        ];
+        
+        // Security through obscurity - additional layer of confusion
+        const _0x4f8b2a = new Date().getTime();
+        const _0x3e9c1d = window.navigator.userAgent;
+        
+        async function _0x2e7b4f(email) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(email.toLowerCase().trim());
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        async function handleCredentialResponse(response) {
             // Decode the JWT token
             const responsePayload = decodeJwtResponse(response.credential);
             
-            // Display user information
+            // Display user information for all authenticated users
             document.getElementById('userName').textContent = responsePayload.name;
             document.getElementById('userEmail').textContent = responsePayload.email;
-            document.getElementById('content').style.display = 'block';
+            document.getElementById('public-content').style.display = 'block';
+            
+            // Hash the email for restricted access check
+            const hashedEmail = await _0x2e7b4f(responsePayload.email);
+            
+            // Check if user is authorized for restricted content
+            if (_0x5f2d3c.includes(hashedEmail)) {
+                document.getElementById('restricted-content').style.display = 'block';
+            }
         }
 
         function decodeJwtResponse(token) {
@@ -76,7 +151,8 @@
 
         function signOut() {
             google.accounts.id.disableAutoSelect();
-            document.getElementById('content').style.display = 'none';
+            document.getElementById('public-content').style.display = 'none';
+            document.getElementById('restricted-content').style.display = 'none';
             location.reload();
         }
     </script>
