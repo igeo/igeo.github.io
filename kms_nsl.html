@@ -41,20 +41,27 @@
 <body>
     <h1>Welcome to KMS NSL</h1>
     
-    <!-- Google Sign In Button -->
-    <div id="g_id_onload"
-         data-client_id="604807124325-np6553a3llircjphvpg26d8ddvdr36m3.apps.googleusercontent.com"
-         data-context="signin"
-         data-callback="handleCredentialResponse"
-         data-auto_prompt="false">
+    <!-- Development Mode Banner -->
+    <div id="dev-mode-banner" style="display: none; background-color: #ff9800; color: white; padding: 10px; margin-bottom: 20px; text-align: center; width: 100%;">
+        ⚠️ Development Mode Active - Authentication Bypassed
     </div>
-    <div class="g_id_signin"
-         data-type="standard"
-         data-size="large"
-         data-theme="outline"
-         data-text="sign_in_with"
-         data-shape="rectangular"
-         data-logo_alignment="left">
+
+    <!-- Google Sign In Button -->
+    <div id="auth-section" style="text-align: center;">
+        <div id="g_id_onload"
+             data-client_id="604807124325-np6553a3llircjphvpg26d8ddvdr36m3.apps.googleusercontent.com"
+             data-context="signin"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-size="large"
+             data-theme="outline"
+             data-text="sign_in_with"
+             data-shape="rectangular"
+             data-logo_alignment="left">
+        </div>
     </div>
 
     <!-- Public content (shown to all authenticated users) -->
@@ -68,6 +75,9 @@
         </div>
         <h3>Public Section</h3>
         <p>This content is visible to all authenticated users.</p>
+        <hr>
+        <p>content below is only visible to authorized users.
+           Please request access if you are KMS students.</p>
     </div>
 
     <!-- Restricted content (shown only to authorized users) -->
@@ -79,10 +89,22 @@
         <div id="restricted-data">
             <!-- Add your restricted content here -->
             <p>Welcome to the restricted area!</p>
+            <hr>
+            <p>This video will be replaced with KMS training.</p>
+            <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/794011394?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="student_experience_videos-2023-02-10"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
         </div>
     </div>
 
     <script>
+    /**
+     * ========================================
+     * DEVELOPMENT MODE SWITCH
+     * ========================================
+     * Set this to true during development to bypass authentication
+     * IMPORTANT: Always set to false before deployment!
+     */
+    const DEVELOPMENT_MODE = false;
+
     /**
      * ========================================
      * HOW TO ADD AUTHORIZED USERS
@@ -122,7 +144,28 @@
             return hashHex;
         }
 
+        // Function to show all content in development mode
+        function showDevModeContent() {
+            document.getElementById('dev-mode-banner').style.display = 'block';
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('userName').textContent = 'Developer';
+            document.getElementById('userEmail').textContent = 'dev@example.com';
+            document.getElementById('public-content').style.display = 'block';
+            document.getElementById('restricted-content').style.display = 'block';
+        }
+
+        // Check for development mode on page load
+        if (DEVELOPMENT_MODE) {
+            showDevModeContent();
+        }
+
         async function handleCredentialResponse(response) {
+            // Skip authentication in development mode
+            if (DEVELOPMENT_MODE) {
+                showDevModeContent();
+                return;
+            }
+
             // Decode the JWT token
             const responsePayload = decodeJwtResponse(response.credential);
             
