@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AoPE JPG Compressor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        .drop-zone.dragover {
+            background-color: #e1e1e1;
+            border-color: #999;
+        }
+        .preview {
+            max-width: 100%;
+            margin: 20px 0;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        .slider-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        #downloadBtn {
+            display: none;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #downloadBtn:hover {
+            background-color: #45a049;
+        }
+        .image-info {
+            margin: 10px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>JPG Compressor</h1>
+    <div class="drop-zone" id="dropZone">
+        <p>Drag and drop a JPG file here or click to select</p>
+        <input type="file" id="fileInput" accept="image/jpeg" style="display: none">
+    </div>
+
+    <div id="imageControls" style="display: none">
+        <div class="image-info">
+            Original size: <span id="originalSize">0</span> pixels
+        </div>
+
+        <div class="slider-container">
+            <label for="pixelSlider">Total Pixels: <span id="pixelCount">0</span>M</label>
+            <input type="range" id="pixelSlider" min="-0.4" max="10" step="0.01" value="0">
+        </div>
+
+        <div class="slider-container">
+            <label for="qualitySlider">Compression Level: <span id="qualityLevel">Medium</span></label>
+            <input type="range" id="qualitySlider" min="0" max="1" step="0.1" value="0.6">
+        </div>
+
+        <div class="preview">
+            <img id="previewImage" style="max-width: 100%">
+        </div>
+
+        <button id="downloadBtn">Download Compressed Image</button>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const imageControls = document.getElementById('imageControls');
+        const previewImage = document.getElementById('previewImage');
+        const pixelSlider = document.getElementById('pixelSlider');
+        const qualitySlider = document.getElementById('qualitySlider');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const pixelCountSpan = document.getElementById('pixelCount');
+        const qualityLevelSpan = document.getElementById('qualityLevel');
+        const originalSizeSpan = document.getElementById('originalSize');
+
+        let originalImage = null;
+        let originalWidth = 0;
+        let originalHeight = 0;
+        let originalFileName = '';
+
+        // Handle drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'image/jpeg') {
+                handleFile(file);
+            }
+        });
+
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            // Store original filename without extension
+            originalFileName = file.name.replace(/\.[^/.]+$/, '');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImage = new Image();
+                originalImage.onload = () => {
+                    originalWidth = originalImage.width;
+                    originalHeight = originalImage.height;
+                    const totalPixels = (originalWidth * originalHeight) / 1000000;
+                    originalSizeSpan.textContent = Math.round(totalPixels * 100) / 100 + 'M';
+                    
+                    // Set max value for pixel slider based on original size
+                    pixelSlider.max = Math.log10(totalPixels * 10); // Convert to log scale
+                    // Set default to 1MB or original size if smaller
+                    pixelSlider.value = Math.log10(Math.min(1, totalPixels) * 10);
+                    
+                    imageControls.style.display = 'block';
+                    downloadBtn.style.display = 'block';
+                    updateImage();
+                };
+                originalImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateQualityLevel(value) {
+            if (value <= 0.2) return 'Very Low';
+            if (value <= 0.4) return 'Low';
+            if (value <= 0.6) return 'Medium';
+            if (value <= 0.8) return 'High';
+            return 'Very High';
+        }
+
+        pixelSlider.addEventListener('input', updateImage);
+        qualitySlider.addEventListener('input', () => {
+            qualityLevelSpan.textContent = updateQualityLevel(qualitySlider.value);
+            updateImage();
+        });
+
+        function updateImage() {
+            if (!originalImage) return;
+
+            // Convert from log scale back to actual megapixels
+            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000; // Convert to actual pixels
+            const aspectRatio = originalWidth / originalHeight;
+            
+            // Calculate new dimensions maintaining aspect ratio
+            let newWidth = Math.sqrt(targetPixels * aspectRatio);
+            let newHeight = newWidth / aspectRatio;
+
+            // Create canvas for resizing
+            const canvas = document.createElement('canvas');
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw image with smooth interpolation
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+
+            // Update preview
+            previewImage.src = canvas.toDataURL('image/jpeg', parseFloat(qualitySlider.value));
+            // Display actual megapixel value, not the log scale value
+            pixelCountSpan.textContent = (Math.pow(10, pixelSlider.value) / 10).toFixed(2);
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000;
+            const aspectRatio = originalWidth / originalHeight;
+            const newWidth = Math.sqrt(targetPixels * aspectRatio);
+            const newHeight = newWidth / aspectRatio;
+
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+
+            // Create download link
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${originalFileName}_compressed.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/jpeg', parseFloat(qualitySlider.value));
+        });
+    </script>
+</body>
+</html>
