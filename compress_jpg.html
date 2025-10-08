@@ -467,6 +467,27 @@
                 const y = margin + (maxHeight - finalHeight) / 2;
                 
                 pdf.addImage(dataUrl, 'JPEG', x, y, finalWidth, finalHeight);
+
+                // Add clickable URL at the bottom of each page
+                const footerY = pageHeight - margin / 2;
+                pdf.setFontSize(10);
+                
+                // Calculate total width for centering
+                const aopeName = 'AoPE';
+                const urlText = 'https://aope.us/';
+                const aopeWidth = pdf.getTextWidth(aopeName);
+                const urlWidth = pdf.getTextWidth(urlText);
+                const spacing = 5; // Space between text and URL
+                const totalWidth = aopeWidth + spacing + urlWidth;
+                const startX = (pageWidth - totalWidth) / 2;
+                
+                // Add AoPE text in Princeton orange
+                pdf.setTextColor(231, 117, 0); // Princeton orange #E77500
+                pdf.text(aopeName, startX, footerY);
+                
+                // Add URL in blue
+                pdf.setTextColor(0, 0, 238); // Blue color for hyperlink
+                pdf.textWithLink(urlText, startX + aopeWidth + spacing, footerY, { url: 'https://aope.us/' });
             }
             
             // Save the PDF
