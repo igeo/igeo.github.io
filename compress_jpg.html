@@ -22,6 +22,11 @@
             padding: 10px;
             background: #f5f5f5;
             border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .image-gallery.dragover {
+            background-color: #e1e1e1;
+            border: 2px dashed #999;
         }
         .image-item {
             position: relative;
@@ -57,21 +62,27 @@
             gap: 10px;
             margin: 20px 0;
         }
-        .drop-zone {
-            border: 2px dashed #ccc;
-            border-radius: 4px;
-            padding: 20px;
-            text-align: center;
-            margin: 20px 0;
-            cursor: pointer;
-        }
-        .drop-zone.dragover {
-            background-color: #e1e1e1;
-            border-color: #999;
-        }
         .preview {
             max-width: 100%;
             margin: 20px 0;
+        }
+        .image-gallery.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ccc;
+            cursor: pointer;
+            min-height: 200px;
+        }
+        .image-gallery.empty .empty-message {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .empty-message {
+            display: none;
+        }
+        .image-gallery.empty .empty-message {
+            display: block;
         }
         .slider-container {
             margin: 20px 0;
@@ -80,18 +91,31 @@
             display: block;
             margin-bottom: 5px;
         }
-        #downloadBtn {
-            display: none;
+        .action-button {
             padding: 10px 20px;
-            background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             margin-top: 10px;
+            transition: background-color 0.3s;
         }
-        #downloadBtn:hover {
+        .action-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        #compressJpgBtn {
+            background-color: #4CAF50;
+        }
+        #compressJpgBtn:hover:not(:disabled) {
             background-color: #45a049;
+        }
+        #generatePdfBtn {
+            background-color: #2196F3;
+        }
+        #generatePdfBtn:hover:not(:disabled) {
+            background-color: #1976D2;
         }
         .image-info {
             margin: 10px 0;
@@ -107,21 +131,19 @@
     </p>
     <p>Single image can be saved in JPG or PDF. Multiple images are saved in one PDF file.
     </p>
-    <div class="drop-zone" id="dropZone">
-        <p>Drag and drop JPG files here or click to select</p>
+    <div id="imageGallery" class="image-gallery empty">
         <input type="file" id="fileInput" accept="image/jpeg" multiple style="display: none">
+        <div class="empty-message">Drag and drop JPG files here or click to select</div>
     </div>
 
-    <div id="imageGallery" class="image-gallery"></div>
-
-    <div id="imageControls">
+    <div id="imageControls" style="display: none">
         <div class="image-info">
             Original size: <span id="originalSize">0</span> pixels
         </div>
 
         <div class="slider-container">
             <label for="pixelSlider">Total Pixels: <span id="pixelCount">0</span>M</label>
-            <input type="range" id="pixelSlider" min="-0.4" max="10" step="0.01" value="0">
+            <input type="range" id="pixelSlider" min="0.4" max="1" step="0.01" value="1">
         </div>
 
         <div class="slider-container">
@@ -130,21 +152,21 @@
         </div>
 
         <div class="action-buttons">
-            <button id="downloadBtn">Download Compressed Images</button>
-            <button id="generatePdfBtn">Generate PDF</button>
+            <button id="compressJpgBtn" class="action-button" disabled>Compress JPG</button>
+            <button id="generatePdfBtn" class="action-button" disabled>Generate PDF</button>
         </div>
     </div>
 
     <script>
         window.jsPDF = window.jspdf.jsPDF;
 
-        const dropZone = document.getElementById('dropZone');
+        // const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
         const imageControls = document.getElementById('imageControls');
         const imageGallery = document.getElementById('imageGallery');
         const pixelSlider = document.getElementById('pixelSlider');
         const qualitySlider = document.getElementById('qualitySlider');
-        const downloadBtn = document.getElementById('downloadBtn');
+        const compressJpgBtn = document.getElementById('compressJpgBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const pixelCountSpan = document.getElementById('pixelCount');
         const qualityLevelSpan = document.getElementById('qualityLevel');
@@ -155,31 +177,52 @@
         // Initialize sortable gallery
         new Sortable(imageGallery, {
             animation: 150,
-            ghostClass: 'sortable-ghost'
+            ghostClass: 'sortable-ghost',
+            onSort: () => {
+                // Update images array to match new gallery order
+                const newOrder = Array.from(imageGallery.children).map(div => {
+                    const fileName = div.querySelector('div').textContent;
+                    return images.find(img => img.name === fileName);
+                });
+                images = newOrder;
+            }
         });
 
         // Handle drag and drop events
-        dropZone.addEventListener('dragover', (e) => {
+        function handleDragOver(e) {
             e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
+            e.stopPropagation();
+            imageGallery.classList.add('dragover');
+        }
 
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
+        function handleDragLeave(e) {
             e.preventDefault();
-            dropZone.classList.remove('dragover');
+            e.stopPropagation();
+            imageGallery.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            imageGallery.classList.remove('dragover');
+            
             const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'image/jpeg');
             if (files.length > 0) {
                 handleFiles(files);
             }
+        }
+
+        // Add drag and drop handlers to the gallery
+        imageGallery.addEventListener('dragover', handleDragOver);
+        imageGallery.addEventListener('dragleave', handleDragLeave);
+        imageGallery.addEventListener('drop', handleDrop);
+        imageGallery.addEventListener('click', (e) => {
+            if (e.target === imageGallery || e.target.classList.contains('empty-message')) {
+                fileInput.click();
+            }
         });
 
-        dropZone.addEventListener('click', () => {
-            fileInput.click();
-        });
+        // No longer needed as we're using the imageGallery as the dropzone
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
@@ -188,6 +231,9 @@
         });
 
         function handleFiles(files) {
+            let loadedCount = 0;
+            const totalFiles = files.length;
+            
             Array.from(files).forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -204,20 +250,23 @@
                             totalPixels: totalPixels
                         });
 
-                        // Update gallery
+                        loadedCount++;
+                        
+                        // Update gallery and button states
                         updateGallery();
+                        updateButtonStates();
                         
-                        // Show controls
+                        // Show controls and hide initial drop zone
                         imageControls.style.display = 'block';
-                        downloadBtn.style.display = 'block';
-                        generatePdfBtn.style.display = 'block';
+                        imageGallery.classList.remove('empty');
 
-                        // Update pixel slider max value if this is the largest image
+                        // Update pixel slider max value to the actual image pixels
                         const maxPixels = Math.max(...images.map(img => img.totalPixels));
-                        pixelSlider.max = Math.log10(maxPixels * 10);
+                        pixelSlider.max = maxPixels;
+                        pixelSlider.min = 0.4;
                         
-                        // Set default to 1MB or smallest image size
-                        pixelSlider.value = Math.log10(Math.min(1, maxPixels) * 10);
+                        // Set default to 1M or image size if smaller
+                        pixelSlider.value = Math.min(1, maxPixels);
                         
                         updateAllImages();
                     };
@@ -229,7 +278,7 @@
 
         function updateGallery() {
             imageGallery.innerHTML = '';
-            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000;
+            const targetPixels = parseFloat(pixelSlider.value) * 1000000;
             const quality = parseFloat(qualitySlider.value);
 
             images.forEach((img, index) => {
@@ -253,10 +302,10 @@
                 removeBtn.onclick = () => {
                     images.splice(index, 1);
                     updateGallery();
+                    updateButtonStates();
                     if (images.length === 0) {
                         imageControls.style.display = 'none';
-                        downloadBtn.style.display = 'none';
-                        generatePdfBtn.style.display = 'none';
+                        imageGallery.classList.add('empty');
                     }
                 };
                 
@@ -287,34 +336,42 @@
         });
 
         function processImage(img, targetPixels, quality) {
+            console.log('Processing image:', img);
             const aspectRatio = img.width / img.height;
             
             // Calculate new dimensions maintaining aspect ratio
             let newWidth = Math.sqrt(targetPixels * aspectRatio);
             let newHeight = newWidth / aspectRatio;
 
+            console.log('New dimensions:', newWidth, 'x', newHeight);
+
             // Create canvas for resizing
             const canvas = document.createElement('canvas');
-            canvas.width = newWidth;
-            canvas.height = newHeight;
+            canvas.width = Math.round(newWidth);
+            canvas.height = Math.round(newHeight);
             const ctx = canvas.getContext('2d');
             
             // Draw image with smooth interpolation
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+            ctx.drawImage(img.element, 0, 0, canvas.width, canvas.height);
 
             return canvas.toDataURL('image/jpeg', quality);
         }
 
         function updateAllImages() {
-            if (images.length === 0) return;
+            if (images.length === 0) {
+                imageGallery.classList.add('empty');
+                imageControls.style.display = 'none';
+                updateButtonStates();
+                return;
+            }
 
-            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000;
+            const targetPixels = parseFloat(pixelSlider.value) * 1000000;
             const quality = parseFloat(qualitySlider.value);
             
             // Update display
-            pixelCountSpan.textContent = (Math.pow(10, pixelSlider.value) / 10).toFixed(2);
+            pixelCountSpan.textContent = parseFloat(pixelSlider.value).toFixed(2);
             qualityLevelSpan.textContent = updateQualityLevel(quality);
             
             if (images.length === 1) {
@@ -323,29 +380,49 @@
                 const maxPixels = Math.max(...images.map(img => img.totalPixels));
                 originalSizeSpan.textContent = maxPixels.toFixed(2) + 'M';
             }
-            
+
+            imageGallery.classList.remove('empty');
+            imageControls.style.display = 'block';
+            updateButtonStates();
             // Update gallery previews with compressed versions
             updateGallery();
         }
-        downloadBtn.addEventListener('click', () => {
-            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000;
+        function updateButtonStates() {
+            console.log('Updating button states. Images length:', images.length);
+            // Enable/disable buttons based on number of images
+            if (images.length === 1) {
+                compressJpgBtn.disabled = false;
+                compressJpgBtn.style.opacity = '1';
+            } else {
+                compressJpgBtn.disabled = true;
+                compressJpgBtn.style.opacity = '0.7';
+            }
+            
+            if (images.length > 0) {
+                generatePdfBtn.disabled = false;
+                generatePdfBtn.style.opacity = '1';
+            } else {
+                generatePdfBtn.disabled = true;
+                generatePdfBtn.style.opacity = '0.7';
+            }
+        }
+
+        compressJpgBtn.addEventListener('click', () => {
+            if (images.length !== 1) return;
+
+            const targetPixels = parseFloat(pixelSlider.value) * 1000000;
             const quality = parseFloat(qualitySlider.value);
 
-            if (images.length === 1) {
-                // Single file - output as JPG
-                const img = images[0];
-                const dataUrl = processImage(img.element, targetPixels, quality);
-                const a = document.createElement('a');
-                a.href = dataUrl;
-                const fileName = img.name.replace(/\.[^/.]+$/, '');
-                a.download = `${fileName}_compressed.jpg`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            } else {
-                // Multiple files - create PDF
-                generatePDF(targetPixels, quality);
-            }
+            // Single file - output as JPG
+            const img = images[0];
+            const dataUrl = processImage(img, targetPixels, quality);
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            const fileName = img.name.replace(/\.[^/.]+$/, '');
+            a.download = `${fileName}_compressed.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         });
 
         function generatePDF(targetPixels, quality) {
@@ -369,7 +446,7 @@
                 if (i > 0) pdf.addPage();
                 
                 const img = orderedImages[i];
-                const dataUrl = processImage(img.element, targetPixels, quality);
+                const dataUrl = processImage(img, targetPixels, quality);
                 
                 // Calculate dimensions to fit within margins while maintaining aspect ratio
                 const maxWidth = pageWidth - 2 * margin;
@@ -396,9 +473,12 @@
             pdf.save('compressed_images.pdf');
         }
 
-        generatePdfBtn.style.display = 'none';  // Hide initially
+        // Set initial button states
+        updateButtonStates();
+        
         generatePdfBtn.addEventListener('click', () => {
-            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000;
+            if (images.length === 0) return;
+            const targetPixels = parseFloat(pixelSlider.value) * 1000000;
             const quality = parseFloat(qualitySlider.value);
             generatePDF(targetPixels, quality);
         });
