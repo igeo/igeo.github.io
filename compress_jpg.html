@@ -4,12 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AoPE JPG Compressor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+        }
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            min-height: 100px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        .image-item {
+            position: relative;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: move;
+        }
+        .image-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        .image-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
         }
         .drop-zone {
             border: 2px dashed #ccc;
@@ -59,12 +105,16 @@
          about 100 KB while keeping it readable. 
          Adjust resolution and quality using the sliders as needed.
     </p>
+    <p>Single image can be saved in JPG or PDF. Multiple images are saved in one PDF file.
+    </p>
     <div class="drop-zone" id="dropZone">
-        <p>Drag and drop a JPG file here or click to select</p>
-        <input type="file" id="fileInput" accept="image/jpeg" style="display: none">
+        <p>Drag and drop JPG files here or click to select</p>
+        <input type="file" id="fileInput" accept="image/jpeg" multiple style="display: none">
     </div>
 
-    <div id="imageControls" style="display: none">
+    <div id="imageGallery" class="image-gallery"></div>
+
+    <div id="imageControls">
         <div class="image-info">
             Original size: <span id="originalSize">0</span> pixels
         </div>
@@ -79,29 +129,34 @@
             <input type="range" id="qualitySlider" min="0" max="1" step="0.1" value="0.6">
         </div>
 
-        <div class="preview">
-            <img id="previewImage" style="max-width: 100%">
+        <div class="action-buttons">
+            <button id="downloadBtn">Download Compressed Images</button>
+            <button id="generatePdfBtn">Generate PDF</button>
         </div>
-
-        <button id="downloadBtn">Download Compressed Image</button>
     </div>
 
     <script>
+        window.jsPDF = window.jspdf.jsPDF;
+
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
         const imageControls = document.getElementById('imageControls');
-        const previewImage = document.getElementById('previewImage');
+        const imageGallery = document.getElementById('imageGallery');
         const pixelSlider = document.getElementById('pixelSlider');
         const qualitySlider = document.getElementById('qualitySlider');
         const downloadBtn = document.getElementById('downloadBtn');
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
         const pixelCountSpan = document.getElementById('pixelCount');
         const qualityLevelSpan = document.getElementById('qualityLevel');
         const originalSizeSpan = document.getElementById('originalSize');
 
-        let originalImage = null;
-        let originalWidth = 0;
-        let originalHeight = 0;
-        let originalFileName = '';
+        let images = [];
+        
+        // Initialize sortable gallery
+        new Sortable(imageGallery, {
+            animation: 150,
+            ghostClass: 'sortable-ghost'
+        });
 
         // Handle drag and drop events
         dropZone.addEventListener('dragover', (e) => {
@@ -116,9 +171,9 @@
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file && file.type === 'image/jpeg') {
-                handleFile(file);
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'image/jpeg');
+            if (files.length > 0) {
+                handleFiles(files);
             }
         });
 
@@ -127,39 +182,96 @@
         });
 
         fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                handleFile(file);
+            if (e.target.files.length > 0) {
+                handleFiles(e.target.files);
             }
         });
 
-        function handleFile(file) {
-            // Store original filename without extension
-            originalFileName = file.name.replace(/\.[^/.]+$/, '');
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                originalImage = new Image();
-                originalImage.onload = () => {
-                    originalWidth = originalImage.width;
-                    originalHeight = originalImage.height;
-                    const totalPixels = (originalWidth * originalHeight) / 1000000;
-                    originalSizeSpan.textContent = Math.round(totalPixels * 100) / 100 + 'M';
-                    
-                    // Set max value for pixel slider based on original size
-                    pixelSlider.max = Math.log10(totalPixels * 10); // Convert to log scale
-                    // Set default to 1MB or original size if smaller
-                    pixelSlider.value = Math.log10(Math.min(1, totalPixels) * 10);
-                    
-                    imageControls.style.display = 'block';
-                    downloadBtn.style.display = 'block';
-                    updateImage();
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const totalPixels = (img.width * img.height) / 1000000;
+                        
+                        // Add image to collection
+                        images.push({
+                            name: file.name,
+                            element: img,
+                            width: img.width,
+                            height: img.height,
+                            totalPixels: totalPixels
+                        });
+
+                        // Update gallery
+                        updateGallery();
+                        
+                        // Show controls
+                        imageControls.style.display = 'block';
+                        downloadBtn.style.display = 'block';
+                        generatePdfBtn.style.display = 'block';
+
+                        // Update pixel slider max value if this is the largest image
+                        const maxPixels = Math.max(...images.map(img => img.totalPixels));
+                        pixelSlider.max = Math.log10(maxPixels * 10);
+                        
+                        // Set default to 1MB or smallest image size
+                        pixelSlider.value = Math.log10(Math.min(1, maxPixels) * 10);
+                        
+                        updateAllImages();
+                    };
+                    img.src = e.target.result;
                 };
-                originalImage.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+                reader.readAsDataURL(file);
+            });
         }
 
+        function updateGallery() {
+            imageGallery.innerHTML = '';
+            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000;
+            const quality = parseFloat(qualitySlider.value);
+
+            images.forEach((img, index) => {
+                const div = document.createElement('div');
+                div.className = 'image-item';
+                
+                // Create thumbnail
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const aspectRatio = img.width / img.height;
+                canvas.width = 200;
+                canvas.height = 200 / aspectRatio;
+                ctx.drawImage(img.element, 0, 0, canvas.width, canvas.height);
+                
+                const thumbnail = document.createElement('img');
+                thumbnail.src = canvas.toDataURL('image/jpeg', quality);
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '×';
+                removeBtn.onclick = () => {
+                    images.splice(index, 1);
+                    updateGallery();
+                    if (images.length === 0) {
+                        imageControls.style.display = 'none';
+                        downloadBtn.style.display = 'none';
+                        generatePdfBtn.style.display = 'none';
+                    }
+                };
+                
+                const fileName = document.createElement('div');
+                fileName.textContent = img.name;
+                fileName.style.fontSize = '12px';
+                fileName.style.overflow = 'hidden';
+                fileName.style.textOverflow = 'ellipsis';
+                
+                div.appendChild(thumbnail);
+                div.appendChild(removeBtn);
+                div.appendChild(fileName);
+                imageGallery.appendChild(div);
+            });
+        }
         function updateQualityLevel(value) {
             if (value <= 0.2) return 'Very Low';
             if (value <= 0.4) return 'Low';
@@ -168,18 +280,14 @@
             return 'Very High';
         }
 
-        pixelSlider.addEventListener('input', updateImage);
+        pixelSlider.addEventListener('input', updateAllImages);
         qualitySlider.addEventListener('input', () => {
             qualityLevelSpan.textContent = updateQualityLevel(qualitySlider.value);
-            updateImage();
+            updateAllImages();
         });
 
-        function updateImage() {
-            if (!originalImage) return;
-
-            // Convert from log scale back to actual megapixels
-            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000; // Convert to actual pixels
-            const aspectRatio = originalWidth / originalHeight;
+        function processImage(img, targetPixels, quality) {
+            const aspectRatio = img.width / img.height;
             
             // Calculate new dimensions maintaining aspect ratio
             let newWidth = Math.sqrt(targetPixels * aspectRatio);
@@ -194,39 +302,105 @@
             // Draw image with smooth interpolation
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+            ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-            // Update preview
-            previewImage.src = canvas.toDataURL('image/jpeg', parseFloat(qualitySlider.value));
-            // Display actual megapixel value, not the log scale value
-            pixelCountSpan.textContent = (Math.pow(10, pixelSlider.value) / 10).toFixed(2);
+            return canvas.toDataURL('image/jpeg', quality);
         }
 
-        downloadBtn.addEventListener('click', () => {
-            const canvas = document.createElement('canvas');
+        function updateAllImages() {
+            if (images.length === 0) return;
+
             const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000;
-            const aspectRatio = originalWidth / originalHeight;
-            const newWidth = Math.sqrt(targetPixels * aspectRatio);
-            const newHeight = newWidth / aspectRatio;
+            const quality = parseFloat(qualitySlider.value);
+            
+            // Update display
+            pixelCountSpan.textContent = (Math.pow(10, pixelSlider.value) / 10).toFixed(2);
+            qualityLevelSpan.textContent = updateQualityLevel(quality);
+            
+            if (images.length === 1) {
+                originalSizeSpan.textContent = images[0].totalPixels.toFixed(2) + 'M';
+            } else {
+                const maxPixels = Math.max(...images.map(img => img.totalPixels));
+                originalSizeSpan.textContent = maxPixels.toFixed(2) + 'M';
+            }
+            
+            // Update gallery previews with compressed versions
+            updateGallery();
+        }
+        downloadBtn.addEventListener('click', () => {
+            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000;
+            const quality = parseFloat(qualitySlider.value);
 
-            canvas.width = newWidth;
-            canvas.height = newHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
-
-            // Create download link
-            canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
+            if (images.length === 1) {
+                // Single file - output as JPG
+                const img = images[0];
+                const dataUrl = processImage(img.element, targetPixels, quality);
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = `${originalFileName}_compressed.jpg`;
+                a.href = dataUrl;
+                const fileName = img.name.replace(/\.[^/.]+$/, '');
+                a.download = `${fileName}_compressed.jpg`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 'image/jpeg', parseFloat(qualitySlider.value));
+            } else {
+                // Multiple files - create PDF
+                generatePDF(targetPixels, quality);
+            }
+        });
+
+        function generatePDF(targetPixels, quality) {
+            // Create PDF with letter size (8.5 x 11 inches, in points)
+            const pdf = new jsPDF({
+                unit: 'pt',
+                format: 'letter'
+            });
+            
+            const pageWidth = 612; // 8.5 inches * 72 points per inch
+            const pageHeight = 792; // 11 inches * 72 points per inch
+            const margin = 36; // 0.5 inch margin
+            
+            // Get images in the current display order
+            const orderedImages = Array.from(imageGallery.children).map(div => {
+                const fileName = div.querySelector('div').textContent;
+                return images.find(img => img.name === fileName);
+            });
+
+            for (let i = 0; i < orderedImages.length; i++) {
+                if (i > 0) pdf.addPage();
+                
+                const img = orderedImages[i];
+                const dataUrl = processImage(img.element, targetPixels, quality);
+                
+                // Calculate dimensions to fit within margins while maintaining aspect ratio
+                const maxWidth = pageWidth - 2 * margin;
+                const maxHeight = pageHeight - 2 * margin;
+                const imgAspectRatio = img.width / img.height;
+                
+                let finalWidth, finalHeight;
+                if (imgAspectRatio > maxWidth / maxHeight) {
+                    finalWidth = maxWidth;
+                    finalHeight = maxWidth / imgAspectRatio;
+                } else {
+                    finalHeight = maxHeight;
+                    finalWidth = maxHeight * imgAspectRatio;
+                }
+                
+                // Center the image on the page
+                const x = margin + (maxWidth - finalWidth) / 2;
+                const y = margin + (maxHeight - finalHeight) / 2;
+                
+                pdf.addImage(dataUrl, 'JPEG', x, y, finalWidth, finalHeight);
+            }
+            
+            // Save the PDF
+            pdf.save('compressed_images.pdf');
+        }
+
+        generatePdfBtn.style.display = 'none';  // Hide initially
+        generatePdfBtn.addEventListener('click', () => {
+            const targetPixels = Math.pow(10, pixelSlider.value) / 10 * 1000000;
+            const quality = parseFloat(qualitySlider.value);
+            generatePDF(targetPixels, quality);
         });
     </script>
 </body>
