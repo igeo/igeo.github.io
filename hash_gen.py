@@ -39,6 +39,19 @@ def read_emails(path: Path):
             if not e:
                 continue
             emails.append(e.lower())
+    # remove duplicates while preserving order
+    seen = set()
+    unique = []
+    dup_count = 0
+    for e in emails:
+        if e in seen:
+            dup_count += 1
+            continue
+        seen.add(e)
+        unique.append(e)
+    if dup_count:
+        print(f"Removed {dup_count} duplicate email{'s' if dup_count != 1 else ''}")
+    emails = unique
     return emails
 
 
