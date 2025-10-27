@@ -125,11 +125,12 @@
 </head>
 <body>
     <h1>AoPE JPG Compressor</h1>
+    <p>This web app takes one or more high resolution JPG images as input, down-sample them
+        to lower resolution and compress them to a single PDF file that is suitable
+        to submit online for homework.</p>
     <p>The default setting compresses a letter-size scan to
          about 100 KB while keeping it readable. 
          Adjust resolution and quality using the sliders as needed.
-    </p>
-    <p>Single image can be saved in JPG or PDF. Multiple images are saved in one PDF file.
     </p>
     <div id="imageGallery" class="image-gallery empty">
         <input type="file" id="fileInput" accept="image/jpeg" multiple style="display: none">
@@ -152,8 +153,7 @@
         </div>
 
         <div class="action-buttons">
-            <button id="compressJpgBtn" class="action-button" disabled>Compress JPG</button>
-            <button id="generatePdfBtn" class="action-button" disabled>Generate PDF</button>
+            <button id="generatePdfBtn" class="action-button" disabled>Generate compressed PDF</button>
         </div>
     </div>
 
@@ -166,7 +166,6 @@
         const imageGallery = document.getElementById('imageGallery');
         const pixelSlider = document.getElementById('pixelSlider');
         const qualitySlider = document.getElementById('qualitySlider');
-        const compressJpgBtn = document.getElementById('compressJpgBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const pixelCountSpan = document.getElementById('pixelCount');
         const qualityLevelSpan = document.getElementById('qualityLevel');
@@ -389,15 +388,7 @@
         }
         function updateButtonStates() {
             console.log('Updating button states. Images length:', images.length);
-            // Enable/disable buttons based on number of images
-            if (images.length === 1) {
-                compressJpgBtn.disabled = false;
-                compressJpgBtn.style.opacity = '1';
-            } else {
-                compressJpgBtn.disabled = true;
-                compressJpgBtn.style.opacity = '0.7';
-            }
-            
+            // Enable/disable PDF button based on number of images
             if (images.length > 0) {
                 generatePdfBtn.disabled = false;
                 generatePdfBtn.style.opacity = '1';
@@ -406,24 +397,6 @@
                 generatePdfBtn.style.opacity = '0.7';
             }
         }
-
-        compressJpgBtn.addEventListener('click', () => {
-            if (images.length !== 1) return;
-
-            const targetPixels = parseFloat(pixelSlider.value) * 1000000;
-            const quality = parseFloat(qualitySlider.value);
-
-            // Single file - output as JPG
-            const img = images[0];
-            const dataUrl = processImage(img, targetPixels, quality);
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            const fileName = img.name.replace(/\.[^/.]+$/, '');
-            a.download = `${fileName}_compressed.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        });
 
         function generatePDF(targetPixels, quality) {
             // Create PDF with letter size (8.5 x 11 inches, in points)
