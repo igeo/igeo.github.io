@@ -10,11 +10,16 @@
     <div id="mission-control-view"></div>
     <div id="zoomed-mission-control-view"></div>
     <div id="pilot-view"></div>
+    <div id="docking-camera-view"></div>
     <div id="ui-container"></div>
     <div id="controls">
         <label for="startDistance">Start Distance (km):</label>
         <input type="number" id="startDistance" value="10" min="1" step="1">
         <button id="setDistance">Set Distance & Restart</button>
+    </div>
+    <div id="instructions-container">
+        <p>Use the Up and Down arrow keys to adjust the nozzle direction.</p>
+        <p>Hold the Spacebar to fire the engine.</p>
     </div>
     <script src="main.js" type="module"></script>
 </body>

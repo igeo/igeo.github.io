@@ -13,6 +13,8 @@ export default class GameStateManager {
                 mass: 420000, // kg
                 position: { x: stationOrbitRadius, y: 0 },
                 velocity: { x: 0, y: stationOrbitalSpeed },
+                orientation: 0,
+                dockingPort: { angle: Math.PI, relative: true }, // Docking port facing left
             },
             {
                 id: 'craft',
@@ -20,13 +22,25 @@ export default class GameStateManager {
                 position: { x: stationOrbitRadius + initialDistance, y: 0 }, // Use initialDistance
                 velocity: { x: 0, y: stationOrbitalSpeed - 10 }, // Slightly different speed
                 thrust: { angle: 0, magnitude: 0 },
+                orientation: 0,
+                angularVelocity: 0,
+                dockingPort: { angle: 0, relative: false }, // Docking port aligned with thrust
             },
         ];
         this.gameState = 'playing';
+        this.dockingMode = false;
     }
 
     getGameObjects() {
         return this.gameObjects;
+    }
+
+    getGameState() {
+        return this.gameState;
+    }
+
+    getDockingMode() {
+        return this.dockingMode;
     }
 
     getUIState() {
@@ -58,10 +72,39 @@ export default class GameStateManager {
                 velocity: relativeVelocity,
             },
             fuel: 100, // Placeholder
+            gameState: this.gameState,
+            dockingMode: this.dockingMode,
         };
     }
 
     updateState(gameObjects) {
-        // Check for win/loss conditions here
+        const craft = this.gameObjects.find(obj => obj.id === 'craft');
+        const station = this.gameObjects.find(obj => obj.id === 'station');
+
+        const distance = Math.sqrt((station.position.x - craft.position.x) ** 2 + (station.position.y - craft.position.y) ** 2);
+        const relativeVelocity = Math.sqrt((station.velocity.x - craft.velocity.x) ** 2 + (station.velocity.y - craft.velocity.y) ** 2);
+        const craftAltitude = Math.sqrt(craft.position.x ** 2 + craft.position.y ** 2) - R_EARTH;
+
+        if (craftAltitude < 100000) { // 100 km altitude for de-orbit
+            this.gameState = 'de-orbited';
+        }
+
+        if (distance < 200) { // 200 meters for docking mode
+            this.dockingMode = true;
+        } else {
+            this.dockingMode = false;
+        }
+
+        if (distance < 50) { // 50 meters for collision/docking check
+            const craftPortAngle = craft.dockingPort.relative ? craft.orientation + craft.dockingPort.angle : craft.dockingPort.angle;
+            const stationPortAngle = station.dockingPort.relative ? station.orientation + station.dockingPort.angle : station.dockingPort.angle;
+            const angleDifference = Math.abs(craftPortAngle - stationPortAngle);
+
+            if (relativeVelocity > 5) {
+                this.gameState = 'crashed';
+            } else if (angleDifference < 0.1) { // 0.1 radians for successful docking
+                this.gameState = 'docked';
+            }
+        }
     }
 }

@@ -35,12 +35,23 @@ export default class GameEngine {
         const deltaTime = timestamp - this.lastTime;
         this.lastTime = timestamp;
 
-        const input = this.inputHandler.getInput();
-        this.physicsEngine.update(deltaTime, this.gameStateManager.getGameObjects(), input);
-        this.gameStateManager.updateState(this.gameStateManager.getGameObjects());
-        this.graphicsEngine.render(this.gameStateManager.getGameObjects());
+        if (this.gameStateManager.gameState === 'playing') {
+            const input = this.inputHandler.getInput();
+            this.physicsEngine.update(deltaTime, this.gameStateManager.getGameObjects(), input, this.gameStateManager.getDockingMode());
+            this.gameStateManager.updateState(this.gameStateManager.getGameObjects());
+        }
+
+        this.graphicsEngine.render(this.gameStateManager.getGameObjects(), this.gameStateManager.getDockingMode());
         this.uiManager.update(this.gameStateManager.getUIState());
 
-        this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
+        if (this.gameStateManager.gameState === 'playing') {
+            this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
+        } else {
+            // Game over, stop the loop
+            cancelAnimationFrame(this.animationFrameId);
+            // Render one last time to show the final state
+            this.graphicsEngine.render(this.gameStateManager.getGameObjects(), this.gameStateManager.getDockingMode());
+            this.uiManager.update(this.gameStateManager.getUIState());
+        }
     }
 }

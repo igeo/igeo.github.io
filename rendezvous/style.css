@@ -32,6 +32,15 @@ body {
     border: 1px solid #fff;
 }
 
+#docking-camera-view {
+    position: absolute;
+    top: 640px; /* Position below pilot-view */
+    left: 10px;
+    width: 400px;
+    height: 200px;
+    border: 1px solid #fff;
+}
+
 #ui-container {
     position: absolute;
     top: 10px;
@@ -99,4 +108,15 @@ body {
 
 #controls button:hover {
     background-color: #0056b3;
+}
+
+#instructions-container {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 400px;
+    padding: 10px;
+    border: 1px solid #fff;
+    background-color: #222;
+    font-size: 12px;
 }

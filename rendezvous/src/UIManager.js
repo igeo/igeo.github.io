@@ -4,6 +4,11 @@ export default class UIManager {
     }
 
     update(uiData) {
+        if (uiData.gameState !== 'playing') {
+            this.renderWinLossScreen(uiData.gameState);
+            return;
+        }
+
         if (!uiData.craft || !uiData.station) {
             this.uiContainer.innerHTML = "Awaiting data...";
             return;
@@ -39,6 +44,38 @@ export default class UIManager {
             </table>
 
             <h4>Fuel: ${uiData.fuel.toFixed(2)}%</h4>
+
+            <div id="instructions">
+                <h4>Key</h4>
+                <p><span style="color: white;">White line:</span> Thrust vector</p>
+                <p><span style="color: lime;">Green line:</span> Docking port</p>
+            </div>
         `;
+    }
+
+    renderWinLossScreen(gameState) {
+        let message = '';
+        switch (gameState) {
+            case 'docked':
+                message = '<h1>Docking Successful!</h1><p>Mission Accomplished.</p>';
+                break;
+            case 'crashed':
+                message = '<h1>Mission Failed!</h1><p>You crashed into the station.</p>';
+                break;
+            case 'de-orbited':
+                message = '<h1>Mission Failed!</h1><p>You have de-orbited and entered the Earth\'s atmosphere.</p>';
+                break;
+        }
+
+        this.uiContainer.innerHTML = `
+            <div class="win-loss-message">
+                ${message}
+                <button id="restart">Restart</button>
+            </div>
+        `;
+
+        document.getElementById('restart').addEventListener('click', () => {
+            window.location.reload(); // Simple restart for now
+        });
     }
 }
