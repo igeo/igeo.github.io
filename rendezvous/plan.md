@@ -73,6 +73,14 @@ This PRD describes "Rendezvous," a web-based game that provides an educational a
     *   Entering the Earth's atmosphere (de-orbiting).
     *   Running out of fuel (if implemented).
 
+### 4.5. Docking Mode and Indicators
+
+*   **Docking Mode:** When the spacecraft is within a certain range of the station, docking mode will be activated, providing more precise controls.
+    *   **Translational Controls:** WASD keys for fine-tuned movement (up, down, left, right).
+    *   **Rotational Controls:** Q and E keys for fine-tuned rotation.
+*   **Pilot View Indicator:** An on-screen box will highlight the station's location. If the station is off-screen, an arrow will point towards it.
+*   **Mission View Indicator:** A line will be drawn on the spacecraft to indicate its docking port, showing the correct orientation for docking.
+
 ## 5. Technical Stack
 
 *   **Language:** JavaScript (or TypeScript for improved maintainability).
@@ -218,3 +226,17 @@ The system will be composed of the following modules:
 8.  The `Game Engine` sends relevant data (e.g., relative velocity) to the `UI Manager` for display.
 9.  The `Graphics Engine` and `UI Manager` draw the new frame on the screen.
 10. The loop repeats.
+
+---
+
+# Implementation Progress
+
+*   **Initial Setup:** Created the basic `index.html`, `style.css`, and `main.js` files.
+*   **Modular Architecture:** Set up the `src` directory with separate modules for `GameEngine`, `PhysicsEngine`, `GraphicsEngine`, `InputHandler`, `GameStateManager`, and `UIManager`.
+*   **Game Loop:** Implemented the main game loop in `GameEngine.js`.
+*   **Game State:** Defined the initial state of the spacecraft and space station in `GameStateManager.js`.
+*   **Physics:** Implemented gravity and thrust calculations in `PhysicsEngine.js`.
+*   **Graphics:** Implemented the Mission Control and Pilot views in `GraphicsEngine.js`. The Mission Control view now shows the Earth, spacecraft, station, and orbits. The Pilot View shows the Earth and the station.
+*   **Input:** Implemented keyboard input for spacecraft control in `InputHandler.js`.
+*   **UI:** Implemented a UI to display distance, relative velocity, and fuel in `UIManager.js`.
+*   **Development Server:** Set up a local development server to run the game.
