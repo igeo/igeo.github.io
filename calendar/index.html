@@ -8,8 +8,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap');
 
 :root{
-  --bi-cell-h: 55px;
-  --weekly-cell-h: 90px;
+  --bi-cell-h: 50px;
+  --weekly-cell-h: 30px;
   --padding-left-marker: 6px;
 }
 
@@ -138,19 +138,19 @@ input[type="number"]{
   opacity:0.12;
 }
 
-/* month colors */
-.month-1  { background-color: #FFCCCC; }
-.month-2  { background-color: #FFDDCC; }
-.month-3  { background-color: #FFEECC; }
-.month-4  { background-color: #FFFFCC; }
-.month-5  { background-color: #EEFFCC; }
-.month-6  { background-color: #DDFFCC; }
-.month-7  { background-color: #CCFFCC; }
-.month-8  { background-color: #CCFFDD; }
-.month-9  { background-color: #CCFFEE; }
-.month-10 { background-color: #CCFFFF; }
-.month-11 { background-color: #CCEEFF; }
-.month-12 { background-color: #CCDDFF; }
+/* month colors for both bi-weekly and weekly cells */
+.day-cell.month-1, .weekly-day-cell.month-1  { background-color: #FFCCCC; }
+.day-cell.month-2, .weekly-day-cell.month-2  { background-color: #FFDDCC; }
+.day-cell.month-3, .weekly-day-cell.month-3  { background-color: #FFEECC; }
+.day-cell.month-4, .weekly-day-cell.month-4  { background-color: #FFFFCC; }
+.day-cell.month-5, .weekly-day-cell.month-5  { background-color: #EEFFCC; }
+.day-cell.month-6, .weekly-day-cell.month-6  { background-color: #DDFFCC; }
+.day-cell.month-7, .weekly-day-cell.month-7  { background-color: #CCFFCC; }
+.day-cell.month-8, .weekly-day-cell.month-8  { background-color: #CCFFDD; }
+.day-cell.month-9, .weekly-day-cell.month-9  { background-color: #CCFFEE; }
+.day-cell.month-10, .weekly-day-cell.month-10 { background-color: #CCFFFF; }
+.day-cell.month-11, .weekly-day-cell.month-11 { background-color: #CCEEFF; }
+.day-cell.month-12, .weekly-day-cell.month-12 { background-color: #CCDDFF; }
 
 /* month markers (for bi-weekly) */
 #monthMarkers{
