@@ -4,13 +4,12 @@ import calendar
 def generate_calendar_html(year=2025):
     """
     Generates a full-year, bi-weekly view calendar as an HTML file.
-
-    Args:
-        year (int): The year for which to generate the calendar.
+    Month markers are positioned next to the exact cell that contains the 1st day of each month.
     """
 
     # --- Configuration ---
-    CELL_HEIGHT = 55  # in pixels, for watermark positioning
+    CELL_HEIGHT = 55  # in pixels, for vertical positioning
+    CELL_PADDING_LEFT = 6  # small pixel nudge to move marker inside the cell
 
     # Colors for each month
     MONTH_COLORS = [
@@ -19,20 +18,16 @@ def generate_calendar_html(year=2025):
     ]
 
     # --- Date Calculation ---
-    # Set the week to start on Monday
     calendar.setfirstweekday(calendar.MONDAY)
 
-    # Find the first day to display on the grid (must be a Monday)
     first_day_of_year = datetime.date(year, 1, 1)
     days_to_subtract = first_day_of_year.weekday()
     grid_start_date = first_day_of_year - datetime.timedelta(days=days_to_subtract)
 
-    # Find the last day to display on the grid (must be a Sunday)
     last_day_of_year = datetime.date(year, 12, 31)
     days_to_add = 6 - last_day_of_year.weekday()
     grid_end_date = last_day_of_year + datetime.timedelta(days=days_to_add)
 
-    # Generate a list of all dates to be displayed
     all_dates = []
     current_date = grid_start_date
     while current_date <= grid_end_date:
@@ -40,12 +35,10 @@ def generate_calendar_html(year=2025):
         current_date += datetime.timedelta(days=1)
 
     # --- HTML and CSS Generation ---
-
-    # CSS Styles
     css_styles = f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap');
-        
+
         body {{
             font-family: 'Quicksand', sans-serif;
             margin: 0;
@@ -76,12 +69,13 @@ def generate_calendar_html(year=2025):
             line-height: 0.9;
         }}
         .calendar-wrapper {{
-            position: relative;
+            position: relative; /* markers positioned relative to this */
             width: 100%;
+            overflow: visible;
         }}
         .calendar-grid {{
             display: grid;
-            grid-template-columns: repeat(14, 1fr); /* Two weeks per row */
+            grid-template-columns: repeat(14, 1fr);
             border-left: 1px solid #eee;
             border-top: 1px solid #eee;
         }}
@@ -97,46 +91,47 @@ def generate_calendar_html(year=2025):
             font-size: 0.9rem;
             font-weight: 500;
             color: #555;
-            position: relative;
             z-index: 2;
         }}
         .weekend .day-number {{
             font-weight: 700;
             color: #333;
         }}
+
         /* Monthly background colors */
         {''.join([f'.month-{i+1} {{ background-color: {color}; }}' for i, color in enumerate(MONTH_COLORS)])}
-        .month-watermark {{
+
+        /* Month markers */
+        .month-marker {{
             position: absolute;
-            width: 100%;
-            text-align: center;
-            font-size: 8rem;
+            font-size: 0.95rem;
             font-weight: 700;
-            color: rgba(180, 180, 200, 0.15);
-            z-index: 1;
-            pointer-events: none; /* Allows text selection through the watermark */
-            text-transform: uppercase;
-            line-height: 1;
+            background-color: rgba(0,0,0,0.07);
+            padding: 4px 8px;
+            display: inline-block;
+            border-radius: 6px;
+            z-index: 5;
+            transform: translateY(6px); /* slight vertical offset to sit within the cell */
+            white-space: nowrap;
         }}
     </style>
     """
 
-    # --- Generate Calendar Grid and Watermarks ---
+    # --- Calendar Grid and Month Markers ---
     html_cells = []
-    month_watermark_positions = {}
+    # store mapping: month -> (absolute_index_in_all_dates, row_index, col_index)
+    month_first_cell_info = {}
 
     for i, date in enumerate(all_dates):
-        row_index = i // 14  # Two weeks per row
+        row_index = i // 14
+        col_index = i % 14
 
-        # Determine month color class
         month_class = f"month-{date.month}"
-
-        # Determine if it's a weekend for bolding
         weekend_class = "weekend" if date.weekday() >= 5 else ""
 
-        # Store the row index for the 15th of each month for watermark positioning
-        if date.day == 15:
-            month_watermark_positions[date.month] = row_index
+        # Record the exact cell index for the 1st day of each month
+        if date.day == 1:
+            month_first_cell_info[date.month] = (i, row_index, col_index)
 
         cell_html = f"""
         <div class="day-cell {month_class} {weekend_class}">
@@ -145,20 +140,23 @@ def generate_calendar_html(year=2025):
         """
         html_cells.append(cell_html)
 
-    html_watermarks = []
-    for month_num, row_idx in month_watermark_positions.items():
+    # Build the marker HTML using the exact column (col_index) and row (row_index).
+    # left is calculated relative to grid width using CSS calc with column index.
+    html_markers = []
+    for month_num, (abs_idx, row_idx, col_idx) in month_first_cell_info.items():
         month_name = calendar.month_abbr[month_num]
-        # Adjust top position to better center the large font over the two-week block
-        top_position = (row_idx * CELL_HEIGHT) - (CELL_HEIGHT * 0.5) 
-
-        watermark_html = f"""
-        <div class="month-watermark" style="top: {top_position}px;">
+        # top in px based on rows
+        top_px = row_idx * CELL_HEIGHT
+        # left: place at the left edge of the target column (use calc so it scales with grid)
+        # add a small pixel nudge so it sits nicely inside the cell
+        left_calc = f"calc({col_idx} * (100% / 14) + {CELL_PADDING_LEFT}px)"
+        marker_html = f"""
+        <div class="month-marker" style="top: {top_px}px; left: {left_calc};">
             {month_name}
         </div>
         """
-        html_watermarks.append(watermark_html)
+        html_markers.append(marker_html)
 
-    # --- Assemble Final HTML ---
     year_panel_html = "".join([f'<div class="year-char">{char}</div>' for char in str(year)])
 
     final_html = f"""
@@ -176,7 +174,7 @@ def generate_calendar_html(year=2025):
                 {year_panel_html}
             </div>
             <div class="calendar-wrapper">
-                {"".join(html_watermarks)}
+                {"".join(html_markers)}
                 <div class="calendar-grid">
                     {"".join(html_cells)}
                 </div>
@@ -186,13 +184,12 @@ def generate_calendar_html(year=2025):
     </html>
     """
 
-    # --- Write to File ---
     filename = f"calendar_{year}.html"
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         f.write(final_html)
 
     print(f"Successfully generated calendar: {filename}")
 
 
 if __name__ == "__main__":
-    generate_calendar_html(2025)
+    generate_calendar_html(2026)
