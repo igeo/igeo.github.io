@@ -216,7 +216,7 @@ function renderCalendar() {
     const col = i % 14;
 
     const div = document.createElement("div");
-    const weekend = (date.getDay() >= 5) ? "weekend" : "";
+    const weekend = (date.getDay() == 0 || date.getDay() == 6) ? "weekend" : "";
     div.className = `day-cell month-${date.getMonth()+1} ${weekend}`;
     div.innerHTML = `<span class="day-number">${date.getDate()}</span>`;
     grid.appendChild(div);
