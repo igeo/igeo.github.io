@@ -1,119 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bi-Weekly Calendar</title>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bi-Weekly + Weekly Calendar</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap');
 
-body {
-  font-family: 'Quicksand', sans-serif;
-  background-color: #f8f8f8;
-  margin: 0;
-  padding: 20px;
+:root{
+  --bi-cell-h: 55px;
+  --weekly-cell-h: 90px;
+  --padding-left-marker: 6px;
 }
 
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+body{
+  font-family: 'Quicksand',sans-serif;
+  background:#f8f8f8;
+  margin:0;
+  padding:20px;
+  -webkit-font-smoothing:antialiased;
 }
 
-button {
-  border: none;
-  background: #4c6ef5;
-  padding: 8px 12px;
-  font-size: 1rem;
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
+.controls{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-bottom:12px;
+  max-width:1200px;
+  margin-left:auto;
+  margin-right:auto;
 }
 
-button:hover {
-  background: #3c5ee0;
+button{
+  border:none;
+  background:#4c6ef5;
+  color:white;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:1rem;
+}
+button:hover{ background:#3c5ee0; }
+
+input[type="number"]{
+  width:90px;
+  padding:4px;
+  font-size:1rem;
+  border-radius:6px;
+  border:1px solid #ddd;
 }
 
-input {
-  width: 90px;
-  font-size: 1rem;
-  padding: 4px;
+/* container for bi-weekly */
+.calendar-container{
+  display:flex;
+  width:100%;
+  max-width:1200px;
+  margin: 8px auto;
+  background:#fff;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  border-radius:6px;
+  overflow:visible;
 }
 
-.calendar-container {
-  display: flex;
-  width: 100%;
-  max-width: 1200px;
-  margin: auto;
-  background-color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+/* left year panel */
+.year-panel{
+  width:120px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:18px 12px;
+  border-right:1px solid #eee;
+  background:#fafafa;
+  border-top-left-radius:6px;
+  border-bottom-left-radius:6px;
+}
+.year-char{
+  font-size:4rem;
+  font-weight:700;
+  color:#a0a0c0;
+  line-height:0.9;
 }
 
-.year-panel {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 0 20px;
-  background-color: #fdfdfd;
-  border-right: 1px solid #eee;
+/* wrapper that holds bi-weekly grid and markers */
+.calendar-wrapper{
+  flex:1;
+  position:relative; /* markers positioned inside */
+  padding:8px;
 }
 
-.year-char {
-  font-size: 4rem;
-  font-weight: 700;
-  color: #a0a0c0;
-  line-height: 0.9;
+/* Bi-weekly grid */
+.calendar-grid{
+  display:grid;
+  grid-template-columns: repeat(14,1fr);
+  grid-auto-rows: var(--bi-cell-h);
+  border-left:1px solid #eee;
+  border-top:1px solid #eee;
+  position:relative;
+  overflow:visible;
+  border-radius:4px;
 }
 
-.calendar-wrapper {
-  flex: 1;
-  position: relative;
-  overflow: visible;
+/* day cell */
+.day-cell{
+  box-sizing:border-box;
+  padding:6px 8px;
+  border-right:1px solid #eee;
+  border-bottom:1px solid #eee;
+  height:var(--bi-cell-h);
+  position:relative;
+  overflow:hidden;
+}
+.day-number{
+  font-size:1.6rem;
+  font-weight:500;
+  color:#555;
+  z-index:2;
 }
 
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(14, 1fr);
-  border-left: 1px solid #eee;
-  border-top: 1px solid #eee;
-  position: relative;
+/* bold weekends */
+.weekend .day-number{
+  font-weight:700;
+  color:#333;
 }
 
-.day-cell {
-  box-sizing: border-box;
-  height: 55px;
-  padding: 4px;
-  border-right: 1px solid #eee;
-  border-bottom: 1px solid #eee;
-  position: relative;
+/* vertical divider (center) */
+.vertical-divider{
+  position:absolute;
+  top:6px;
+  bottom:6px;
+  left:50%;
+  width:2px;
+  background:#333;
+  z-index:100;
+  transform:translateX(-1px);
+  border-radius:2px;
+  opacity:0.12;
 }
 
-.day-number {
-  font-size: 1.6rem;
-  font-weight: 500;
-  color: #555;
-  z-index: 2;
-}
-
-.weekend .day-number {
-  font-weight: 700;
-  color: #333;
-}
-
-.vertical-divider {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  background-color: #333;
-  z-index: 100;
-}
-
-/* Month colors (Jan→Dec) */
+/* month colors */
 .month-1  { background-color: #FFCCCC; }
 .month-2  { background-color: #FFDDCC; }
 .month-3  { background-color: #FFEECC; }
@@ -127,33 +152,117 @@ input {
 .month-11 { background-color: #CCEEFF; }
 .month-12 { background-color: #CCDDFF; }
 
-/* Month markers */
-.month-marker {
-  position: absolute;
-  font-size: 0.95rem;
-  font-weight: 700;
-  background-color: rgba(0,0,0,0.07);
-  padding: 4px 8px;
-  border-radius: 6px;
-  z-index: 200;
-  transform: translateY(6px);
-  white-space: nowrap;
+/* month markers (for bi-weekly) */
+#monthMarkers{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  pointer-events:none;
+  z-index:200;
+}
+.month-marker{
+  position:absolute;
+  font-size:0.95rem;
+  font-weight:700;
+  background:rgba(0,0,0,0.07);
+  padding:4px 8px;
+  border-radius:6px;
+  white-space:nowrap;
+  transform:translateY(6px); /* default; X translation added inline */
+}
+
+/* ---------- weekly calendar styles ---------- */
+.weekly-container{
+  margin: 28px auto 60px;
+  width:100%;
+  max-width:1200px;
+  background:#fff;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  border-radius:6px;
+  overflow:visible;
+  position:relative;
+  border:1px solid #eee;
+}
+
+/* weekly markers layer */
+#weeklyMarkers{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  z-index:200;
+  pointer-events:none;
+}
+
+/* weekly grid uses 7 columns, automatically wraps rows */
+.weekly-grid{
+  display:grid;
+  grid-template-columns: repeat(7,1fr);
+  grid-auto-rows: var(--weekly-cell-h);
+  border-left:1px solid #eee;
+  border-top:1px solid #eee;
+  position:relative;
+}
+
+/* weekly day cell */
+.weekly-day-cell{
+  box-sizing:border-box;
+  padding:8px;
+  border-right:1px solid #eee;
+  border-bottom:1px solid #eee;
+  position:relative;
+  height:var(--weekly-cell-h);
+  overflow:hidden;
+  background:transparent;
+}
+
+/* weekly date number small to leave note space */
+.weekly-day-number{
+  font-size:0.9rem;
+  font-weight:500;
+  color:#555;
+  z-index:2;
+}
+
+/* weekend bold in weekly */
+.weekly-weekend .weekly-day-number{
+  font-weight:700;
+  color:#333;
+}
+
+/* weekly month marker */
+.weekly-month-marker{
+  position:absolute;
+  font-size:0.75rem;
+  font-weight:700;
+  background:rgba(0,0,0,0.07);
+  padding:2px 6px;
+  border-radius:6px;
+  transform:translateY(4px);
+  white-space:nowrap;
+}
+
+/* small responsive tweaks */
+@media (max-width:880px){
+  .year-char{ font-size:3rem; }
+  .day-number{ font-size:1.2rem; }
+  :root{ --bi-cell-h:48px; --weekly-cell-h:84px; }
 }
 </style>
 </head>
-
 <body>
 
 <div class="controls">
   <button onclick="changeYear(-1)">← Prev</button>
-  <input type="number" id="yearInput" min="1" max="9999" value="2025">
+  <input id="yearInput" type="number" min="1" max="9999" value="2025" />
   <button onclick="changeYear(1)">Next →</button>
   <button onclick="renderCalendar()">Go</button>
 </div>
 
+<!-- Bi-weekly calendar -->
 <div class="calendar-container">
   <div id="yearPanel" class="year-panel"></div>
-
   <div class="calendar-wrapper">
     <div class="vertical-divider"></div>
     <div id="monthMarkers"></div>
@@ -161,83 +270,153 @@ input {
   </div>
 </div>
 
-<script>
-const CELL_HEIGHT = 55;
-const CELL_PADDING_LEFT = 6;
+<!-- Weekly calendar -->
+<div class="weekly-container">
+  <div id="weeklyMarkers"></div>
+  <div id="weeklyGrid" class="weekly-grid"></div>
+</div>
 
-function changeYear(delta) {
-  const y = document.getElementById("yearInput");
-  y.value = Number(y.value) + delta;
+<script>
+/* constants (kept in JS as well for layout calculations) */
+const CELL_HEIGHT = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bi-cell-h')) || 55;
+const WEEK_CELL_HEIGHT = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--weekly-cell-h')) || 90;
+const CELL_PADDING_LEFT = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--padding-left-marker')) || 6;
+
+function changeYear(delta){
+  const el = document.getElementById('yearInput');
+  el.value = Number(el.value) + delta;
   renderCalendar();
 }
-
-function monthAbbr(m) {
-  return ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m];
+function monthAbbr(m){
+  return ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m] || "";
 }
 
-function renderCalendar() {
-  const year = parseInt(document.getElementById("yearInput").value);
+/* return Monday-aligned start */
+function mondayStart(date){
+  const d = new Date(date.getTime());
+  // JS: getDay(): 0=Sun,1=Mon,... convert to Monday index (0=Mon..6=Sun) as (getDay()+6)%7
+  const offset = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - offset);
+  d.setHours(0,0,0,0);
+  return d;
+}
+/* return Sunday-aligned end (so full weeks) */
+function sundayEnd(date){
+  const d = new Date(date.getTime());
+  const offset = (d.getDay() + 6) % 7; // 0..6 (Mon..Sun)
+  const daysToAdd = 6 - offset; // days to Sunday
+  d.setDate(d.getDate() + daysToAdd);
+  d.setHours(0,0,0,0);
+  return d;
+}
 
-  // update side year panel
-  const yearPanel = document.getElementById("yearPanel");
-  yearPanel.innerHTML = "";
+function renderCalendar(){
+  const year = parseInt(document.getElementById('yearInput').value, 10) || new Date().getFullYear();
+
+  // update year panel
+  const yearPanel = document.getElementById('yearPanel');
+  yearPanel.innerHTML = '';
   [...String(year)].forEach(ch => {
-    const div = document.createElement("div");
-    div.className = "year-char";
-    div.textContent = ch;
-    yearPanel.appendChild(div);
+    const d = document.createElement('div');
+    d.className = 'year-char';
+    d.textContent = ch;
+    yearPanel.appendChild(d);
   });
 
-  const grid = document.getElementById("calendarGrid");
-  const markers = document.getElementById("monthMarkers");
+  // prepare grid containers
+  const grid = document.getElementById('calendarGrid');
+  const markers = document.getElementById('monthMarkers');
+  const weeklyGrid = document.getElementById('weeklyGrid');
+  const weeklyMarkers = document.getElementById('weeklyMarkers');
 
-  grid.innerHTML = "";
-  markers.innerHTML = "";
+  grid.innerHTML = '';
+  markers.innerHTML = '';
+  weeklyGrid.innerHTML = '';
+  weeklyMarkers.innerHTML = '';
 
-  // compute Monday-aligned start
-  const first = new Date(year, 0, 1);
-  const start = new Date(first);
-  start.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+  // determine full range for the year, aligned to whole weeks (Mon->Sun)
+  const firstOfYear = new Date(year,0,1);
+  const lastOfYear  = new Date(year,11,31);
+  const start = mondayStart(firstOfYear);
+  const end = sundayEnd(lastOfYear);
 
-  // compute Sunday-aligned end
-  const last = new Date(year, 11, 31);
-  const end = new Date(last);
-  end.setDate(last.getDate() + (7 - ((last.getDay() + 6) % 7) - 1));
-
+  // build array of dates
   const dates = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+  for(let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)){
     dates.push(new Date(d));
   }
 
-  const monthFirst = {};
-
-  dates.forEach((date, i) => {
+  // --- Bi-weekly grid (14 columns) ---
+  const monthFirstBi = {}; // month -> {row, col, index}
+  dates.forEach((date,i) => {
     const row = Math.floor(i / 14);
     const col = i % 14;
 
-    const div = document.createElement("div");
-    const weekend = (date.getDay() == 0 || date.getDay() == 6) ? "weekend" : "";
-    div.className = `day-cell month-${date.getMonth()+1} ${weekend}`;
-    div.innerHTML = `<span class="day-number">${date.getDate()}</span>`;
-    grid.appendChild(div);
+    const cell = document.createElement('div');
+    const isWeekend = (date.getDay() === 0 || date.getDay() === 6); // Sunday=0, Saturday=6
+    cell.className = `day-cell month-${date.getMonth()+1}` + (isWeekend ? ' weekend' : '');
+    cell.innerHTML = `<span class="day-number">${date.getDate()}</span>`;
+    grid.appendChild(cell);
 
+    // track where the first of a month falls
     if (date.getDate() === 1) {
-      monthFirst[date.getMonth()+1] = { row, col };
+      monthFirstBi[date.getMonth()+1] = { row, col, index: i };
     }
   });
 
-  Object.entries(monthFirst).forEach(([m, pos]) => {
-    const marker = document.createElement("div");
-    marker.className = "month-marker";
-    marker.textContent = monthAbbr(parseInt(m));
-    marker.style.top = `${pos.row * CELL_HEIGHT}px`;
-    marker.style.left = `calc(${pos.col} * (100% / 14) + ${CELL_PADDING_LEFT}px)`;
+  // place month markers for bi-weekly grid
+  Object.entries(monthFirstBi).forEach(([m,pos]) => {
+    const marker = document.createElement('div');
+    marker.className = 'month-marker';
+    marker.textContent = monthAbbr(Number(m));
+    // left as percentage of 14 columns, plus small pixel nudge via transformX
+    const percentLeft = (pos.col / 14) * 100;
+    marker.style.left = percentLeft + '%';
+    // nudge via transformX to match padding
+    marker.style.transform = `translateY(6px) translateX(${CELL_PADDING_LEFT}px)`;
+    // top based on row * cell height
+    marker.style.top = (pos.row * CELL_HEIGHT) + 'px';
     markers.appendChild(marker);
   });
+
+  // show vertical divider already in DOM .vertical-divider
+
+  // --- Weekly grid (7 columns, multiple rows) ---
+  const monthFirstWeekly = {}; // month -> {weekRow, col, index}
+  dates.forEach((date,i) => {
+    const col = i % 7; // Monday-aligned because start is Monday
+    const weekRow = Math.floor(i / 7);
+
+    const wcell = document.createElement('div');
+    const weekend = (date.getDay() === 0 || date.getDay() === 6);
+    wcell.className = `weekly-day-cell month-${date.getMonth()+1}` + (weekend ? ' weekly-weekend' : '');
+    wcell.innerHTML = `<div class="weekly-day-number">${date.getDate()}</div>`;
+    weeklyGrid.appendChild(wcell);
+
+    if (date.getDate() === 1) {
+      monthFirstWeekly[date.getMonth()+1] = { weekRow, col, index: i };
+    }
+  });
+
+  // place month markers for weekly grid
+  Object.entries(monthFirstWeekly).forEach(([m,pos]) => {
+    const marker = document.createElement('div');
+    marker.className = 'weekly-month-marker';
+    marker.textContent = monthAbbr(Number(m));
+    // left as percentage of 7 columns
+    const percentLeft = (pos.col / 7) * 100;
+    marker.style.left = percentLeft + '%';
+    marker.style.top = (pos.weekRow * WEEK_CELL_HEIGHT) + 'px';
+    // nudge small x offset
+    marker.style.transform = `translateY(4px) translateX(${CELL_PADDING_LEFT}px)`;
+    weeklyMarkers.appendChild(marker);
+  });
+
+  // DONE: calendars rendered
 }
 
+// initial render
 renderCalendar();
 </script>
-
 </body>
 </html>
