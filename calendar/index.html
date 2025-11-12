@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bi-Weekly Calendar</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap');
+
+body {
+  font-family: 'Quicksand', sans-serif;
+  background-color: #f8f8f8;
+  margin: 0;
+  padding: 20px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+button {
+  border: none;
+  background: #4c6ef5;
+  padding: 8px 12px;
+  font-size: 1rem;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3c5ee0;
+}
+
+input {
+  width: 90px;
+  font-size: 1rem;
+  padding: 4px;
+}
+
+.calendar-container {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.year-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
+  background-color: #fdfdfd;
+  border-right: 1px solid #eee;
+}
+
+.year-char {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #a0a0c0;
+  line-height: 0.9;
+}
+
+.calendar-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: visible;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  border-left: 1px solid #eee;
+  border-top: 1px solid #eee;
+  position: relative;
+}
+
+.day-cell {
+  box-sizing: border-box;
+  height: 55px;
+  padding: 4px;
+  border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  position: relative;
+}
+
+.day-number {
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: #555;
+  z-index: 2;
+}
+
+.weekend .day-number {
+  font-weight: 700;
+  color: #333;
+}
+
+.vertical-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background-color: #333;
+  z-index: 100;
+}
+
+/* Month colors (Jan→Dec) */
+.month-1  { background-color: #FFCCCC; }
+.month-2  { background-color: #FFDDCC; }
+.month-3  { background-color: #FFEECC; }
+.month-4  { background-color: #FFFFCC; }
+.month-5  { background-color: #EEFFCC; }
+.month-6  { background-color: #DDFFCC; }
+.month-7  { background-color: #CCFFCC; }
+.month-8  { background-color: #CCFFDD; }
+.month-9  { background-color: #CCFFEE; }
+.month-10 { background-color: #CCFFFF; }
+.month-11 { background-color: #CCEEFF; }
+.month-12 { background-color: #CCDDFF; }
+
+/* Month markers */
+.month-marker {
+  position: absolute;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background-color: rgba(0,0,0,0.07);
+  padding: 4px 8px;
+  border-radius: 6px;
+  z-index: 200;
+  transform: translateY(6px);
+  white-space: nowrap;
+}
+</style>
+</head>
+
+<body>
+
+<div class="controls">
+  <button onclick="changeYear(-1)">← Prev</button>
+  <input type="number" id="yearInput" min="1" max="9999" value="2025">
+  <button onclick="changeYear(1)">Next →</button>
+  <button onclick="renderCalendar()">Go</button>
+</div>
+
+<div class="calendar-container">
+  <div id="yearPanel" class="year-panel"></div>
+
+  <div class="calendar-wrapper">
+    <div class="vertical-divider"></div>
+    <div id="monthMarkers"></div>
+    <div id="calendarGrid" class="calendar-grid"></div>
+  </div>
+</div>
+
+<script>
+const CELL_HEIGHT = 55;
+const CELL_PADDING_LEFT = 6;
+
+function changeYear(delta) {
+  const y = document.getElementById("yearInput");
+  y.value = Number(y.value) + delta;
+  renderCalendar();
+}
+
+function monthAbbr(m) {
+  return ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m];
+}
+
+function renderCalendar() {
+  const year = parseInt(document.getElementById("yearInput").value);
+
+  // update side year panel
+  const yearPanel = document.getElementById("yearPanel");
+  yearPanel.innerHTML = "";
+  [...String(year)].forEach(ch => {
+    const div = document.createElement("div");
+    div.className = "year-char";
+    div.textContent = ch;
+    yearPanel.appendChild(div);
+  });
+
+  const grid = document.getElementById("calendarGrid");
+  const markers = document.getElementById("monthMarkers");
+
+  grid.innerHTML = "";
+  markers.innerHTML = "";
+
+  // compute Monday-aligned start
+  const first = new Date(year, 0, 1);
+  const start = new Date(first);
+  start.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+
+  // compute Sunday-aligned end
+  const last = new Date(year, 11, 31);
+  const end = new Date(last);
+  end.setDate(last.getDate() + (7 - ((last.getDay() + 6) % 7) - 1));
+
+  const dates = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dates.push(new Date(d));
+  }
+
+  const monthFirst = {};
+
+  dates.forEach((date, i) => {
+    const row = Math.floor(i / 14);
+    const col = i % 14;
+
+    const div = document.createElement("div");
+    const weekend = (date.getDay() >= 5) ? "weekend" : "";
+    div.className = `day-cell month-${date.getMonth()+1} ${weekend}`;
+    div.innerHTML = `<span class="day-number">${date.getDate()}</span>`;
+    grid.appendChild(div);
+
+    if (date.getDate() === 1) {
+      monthFirst[date.getMonth()+1] = { row, col };
+    }
+  });
+
+  Object.entries(monthFirst).forEach(([m, pos]) => {
+    const marker = document.createElement("div");
+    marker.className = "month-marker";
+    marker.textContent = monthAbbr(parseInt(m));
+    marker.style.top = `${pos.row * CELL_HEIGHT}px`;
+    marker.style.left = `calc(${pos.col} * (100% / 14) + ${CELL_PADDING_LEFT}px)`;
+    markers.appendChild(marker);
+  });
+}
+
+renderCalendar();
+</script>
+
+</body>
+</html>
