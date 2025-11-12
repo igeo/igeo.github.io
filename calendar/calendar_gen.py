@@ -78,7 +78,20 @@ def generate_calendar_html(year=2025):
             grid-template-columns: repeat(14, 1fr);
             border-left: 1px solid #eee;
             border-top: 1px solid #eee;
+            position: relative; /* Added for vertical line */
         }}
+
+        /* Vertical divider for two weeks */
+        .vertical-divider {{
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%; /* Center divider */
+            width: 2px;
+            background-color: #333; /* Dark line */
+            z-index: 1;
+        }}
+
         .day-cell {{
             box-sizing: border-box;
             height: {CELL_HEIGHT}px;
@@ -88,7 +101,7 @@ def generate_calendar_html(year=2025):
             position: relative;
         }}
         .day-number {{
-            font-size: 0.9rem;
+            font-size: 2.0rem; /* Increased font size to fit the cell */
             font-weight: 500;
             color: #555;
             z-index: 2;
@@ -174,6 +187,7 @@ def generate_calendar_html(year=2025):
                 {year_panel_html}
             </div>
             <div class="calendar-wrapper">
+                <div class="vertical-divider"></div> <!-- Added vertical divider -->
                 {"".join(html_markers)}
                 <div class="calendar-grid">
                     {"".join(html_cells)}
@@ -192,4 +206,5 @@ def generate_calendar_html(year=2025):
 
 
 if __name__ == "__main__":
-    generate_calendar_html(2026)
+    for y in range(2025, 2028):
+        generate_calendar_html(y)
