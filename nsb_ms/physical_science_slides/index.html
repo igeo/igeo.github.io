@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSB MS Physical Science Guide</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --accent-color: #38bdf8;
+            --secondary-color: #94a3b8;
+            --highlight-color: #f472b6;
+            --code-bg: #1e293b;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #slide-container {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            width: 80%;
+            max-width: 1000px;
+            height: 80%;
+            flex-direction: column;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+            margin-top: 0;
+        }
+
+        ul {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        li::before {
+            content: "•";
+            color: var(--highlight-color);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        li ul {
+            font-size: 1.4rem;
+            margin-top: 0.5rem;
+            margin-left: 2rem;
+        }
+
+        li ul li::before {
+            content: "-";
+            color: var(--secondary-color);
+        }
+
+        .math {
+            font-family: 'Courier New', monospace;
+            background: var(--code-bg);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            color: #fbbf24;
+        }
+
+        .speed-check {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid var(--highlight-color);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .speed-check-question {
+            font-weight: bold;
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .speed-check-answer {
+            font-size: 1.6rem;
+            color: var(--accent-color);
+            display: none;
+            font-weight: bold;
+        }
+
+        .reveal-btn {
+            background: var(--highlight-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .reveal-btn:hover {
+            background: #db2777;
+        }
+
+        .visual-cue {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-height: 40%;
+        }
+
+        .visual-cue img {
+            max-height: 300px;
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            font-size: 1rem;
+            color: var(--secondary-color);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Title Slide Specifics */
+        .title-slide {
+            text-align: center;
+            align-items: center;
+        }
+        .title-slide h1 {
+            font-size: 4.5rem;
+            margin-bottom: 1rem;
+        }
+        .title-slide h2 {
+            font-size: 2rem;
+            border: none;
+            color: var(--secondary-color);
+        }
+        .title-slide .goal {
+            margin-top: 3rem;
+            font-size: 1.5rem;
+            color: var(--highlight-color);
+        }
+
+        /* Module Header Slides */
+        .module-header {
+            text-align: center;
+            align-items: center;
+            background: linear-gradient(45deg, var(--bg-color), #1e293b);
+        }
+        .module-header h1 {
+            font-size: 4rem;
+        }
+        .module-header p {
+            font-size: 2rem;
+            color: var(--secondary-color);
+            font-style: italic;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="slide-container">
+        <!-- Slides will be injected here -->
+    </div>
+
+    <div class="progress-bar" id="progress-bar"></div>
+    <div class="slide-number" id="slide-number"></div>
+
+    <div class="controls">
+        <button class="control-btn" onclick="prevSlide()">Previous</button>
+        <button class="control-btn" onclick="nextSlide()">Next</button>
+    </div>
+
+    <script>
+        const slidesData = [
+            {
+                type: 'title',
+                title: 'Science Fundamentals: High Frequency Topics',
+                subtitle: 'Mechanics, Matter, and Periodic Trends',
+                goal: 'Goal: Master the "Must Know" logic and formulas for speed.'
+            },
+            {
+                type: 'content',
+                title: 'The Scientific Method',
+                content: [
+                    '<strong>Steps:</strong> Observation &rarr; Hypothesis &rarr; Experiment &rarr; Analysis &rarr; Conclusion.',
+                    '<strong>Variables:</strong>',
+                    '<ul><li><strong>Independent:</strong> What you change (The Cause).</li><li><strong>Dependent:</strong> What you measure (The Effect).</li><li><strong>Control:</strong> Kept constant for comparison.</li></ul>'
+                ],
+                speedCheck: {
+                    question: 'In an experiment testing fertilizer on plant growth, what is the dependent variable?',
+                    answer: 'Plant Growth'
+                }
+            },
+            {
+                type: 'content',
+                title: 'Measurement & Precision',
+                content: [
+                    '<strong>SI Units:</strong> Meter (m), Kilogram (kg), Second (s), Kelvin (K), Mole (mol).',
+                    '<strong>Accuracy vs. Precision:</strong>',
+                    '<ul><li><strong>Accuracy:</strong> How close to the true value (Bullseye).</li><li><strong>Precision:</strong> How consistent the measurements are (Grouped).</li></ul>',
+                    '<strong>Sig Figs:</strong> Non-zeros are significant. Zeros between non-zeros are significant.'
+                ],
+                speedCheck: {
+                    question: 'How many sig figs in 0.00405?',
+                    answer: '3'
+                }
+            },
+            {
+                type: 'content',
+                title: 'Atomic Structure & Particles',
+                content: [
+                    '<strong>Proton:</strong> (+) charge, in nucleus. Identity (Atomic #).',
+                    '<strong>Neutron:</strong> (0) charge, in nucleus. Isotope/Mass.',
+                    '<strong>Electron:</strong> (-) charge, orbital cloud. Reactivity.',
+                    '<strong>Formulas:</strong> Mass # = P + N, Charge = P - E.'
+                ],
+                image: 'atom_structure.png',
+                speedCheck: {
+                    question: 'If an atom has 6 protons and 8 neutrons, what is its mass number?',
+                    answer: '14'
+                }
+            },
+            {
+                type: 'content',
+                title: 'Newton’s Second Law',
+                content: [
+                    '<strong>Formula:</strong> <span class="math">F_{net} = m &times; a</span>',
+                    '<strong>Units:</strong> Newtons (N) = kg &middot; m/s&sup2;',
+                    '<strong>Key Concepts:</strong>',
+                    '<ul><li><strong>Mass vs. Weight:</strong> Mass is constant. Weight = mg.</li><li><strong>Friction:</strong> Opposes motion.</li></ul>'
+                ],
+                speedCheck: {
+                    question: 'If a 10kg rock accelerates at 2 m/s&sup2;, what is the Force?',
+                    answer: '20 N'
+                }
+            },
+            {
+                type: 'content',
+                title: 'Stoichiometry & The Mole',
+                content: [
+                    '<strong>The Mole:</strong> 6.02 &times; 10&sup2;&sup3; particles (Avogadro).',
+                    '<strong>Molar Mass:</strong> Mass of 1 mole (from Periodic Table).',
+                    '<strong>Calculations:</strong> Grams &harr; Moles (use Molar Mass).',
+                    '<strong>Balancing:</strong> Atoms on Left must = Atoms on Right.'
+                ],
+                speedCheck: {
+                    question: 'Carbon has a mass of 12g/mol. How many moles are in 24g of Carbon?',
+                    answer: '2 moles'
+                }
+            },
+            {
+                type: 'content',
+                title: 'Simple Machines',
+                content: [
+                    '<strong>Goal:</strong> Make work easier (trade distance for force).',
+                    '<strong>The 6 Types:</strong> Lever, Pulley, Wheel & Axle, Inclined Plane, Wedge, Screw.',
+                    '<strong>Mechanical Advantage (MA):</strong> Output Force / Input Force.'
+                ],
+                image: 'simple_machines.png',
+                speedCheck: {
+                    question: 'Does a simple machine change the amount of Work done?',
+                    answer: 'No, only the force required.'
+                }
+            },
+            {
+                type: 'content',
+                title: 'Chemical Bonding',
+                content: [
+                    '<strong>Ionic:</strong> Transfer of electrons (Metal + Non-Metal).',
+                    '<strong>Covalent:</strong> Sharing of electrons (Non-Metal + Non-Metal).',
+                    '<strong>Metallic:</strong> "Sea of electrons" (Metal + Metal).',
+                    '<strong>Nomenclature:</strong> Ionic ends in "-ide". Covalent uses prefixes (Mono-, Di-).'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Acids, Bases, and pH',
+                content: [
+                    '<strong>pH Scale:</strong> 0–6.9 Acidic | 7 Neutral | 7.1–14 Basic.',
+                    '<strong>Logarithmic:</strong> pH 4 is 10x more acidic than pH 5.',
+                    '<strong>Definitions:</strong> Acids donate H+, Bases accept H+.',
+                    '<strong>Neutralization:</strong> Acid + Base &rarr; Salt + Water.'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Phase Changes',
+                content: [
+                    '<strong>Transitions:</strong> Melting/Freezing (S&harr;L), Boiling/Condensation (L&harr;G).',
+                    '<strong>Sublimation:</strong> Solid &rarr; Gas.',
+                    '<strong>Triple Point:</strong> Where Solid, Liquid, Gas exist simultaneously.',
+                    '<strong>States:</strong> Solid, Liquid, Gas, Plasma.'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Kinematics (Linear Motion)',
+                content: [
+                    '<strong>Variables:</strong> Displacement (d), Velocity (v), Acceleration (a), Time (t).',
+                    '<strong>Free Fall:</strong> <span class="math">d = 0.5 &times; a &times; t&sup2;</span>',
+                    '<strong>Gravity:</strong> g &approx; 9.8 or 10 m/s&sup2;.'
+                ],
+                speedCheck: {
+                    question: 'An object falls for 3 seconds (a=10). How far did it fall?',
+                    answer: '45m'
+                }
+            },
+            {
+                type: 'content',
+                title: 'Periodic Table Trends',
+                content: [
+                    '<strong>Groups:</strong> Alkali (1), Halogens (17), Noble Gases (18).',
+                    '<strong>Atomic Radius:</strong> Increases Down and Left.',
+                    '<strong>Electronegativity:</strong> Increases Up and Right (Fluorine is hungriest).'
+                ],
+                image: 'periodic_trends.png'
+            },
+            {
+                type: 'content',
+                title: 'Energy Forms',
+                content: [
+                    '<strong>Kinetic:</strong> <span class="math">KE = 0.5 &times; mv&sup2;</span>',
+                    '<strong>Potential:</strong> <span class="math">PE = mgh</span>',
+                    '<strong>Conservation:</strong> Energy cannot be created or destroyed.',
+                    '<strong>Heat Transfer:</strong> Conduction (Touch), Convection (Fluid), Radiation (Light).'
+                ]
+            },
+            {
+                type: 'module',
+                title: 'MODULE 2: The Calculation Core',
+                subtitle: 'Focus: Word problems, specific laws, and relationships.'
+            },
+            {
+                type: 'content',
+                title: 'Electric Circuits',
+                content: [
+                    '<strong>Ohm’s Law:</strong> <span class="math">V = I &times; R</span>',
+                    '<strong>Power:</strong> <span class="math">P = I &times; V</span>',
+                    '<strong>Series:</strong> Current same, R adds up.',
+                    '<strong>Parallel:</strong> Voltage same, 1/R adds up.'
+                ],
+                image: 'circuits_comparison.png'
+            },
+            {
+                type: 'content',
+                title: 'Gas Laws',
+                content: [
+                    '<strong>Ideal Gas Law:</strong> <span class="math">PV = nRT</span>',
+                    '<strong>Boyle’s:</strong> P up, V down (Inverse).',
+                    '<strong>Charles’s:</strong> T up, V up (Direct).',
+                    '<strong>Note:</strong> Temp must be in Kelvin (C + 273).'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Waves (Sound & Light)',
+                content: [
+                    '<strong>Equation:</strong> <span class="math">v = f &times; &lambda;</span>',
+                    '<strong>Behaviors:</strong> Reflection (Bounce), Refraction (Bend), Diffraction (Around corner).',
+                    '<strong>Doppler Effect:</strong> Pitch changes with motion.'
+                ],
+                image: 'wave_diagram.png'
+            },
+            {
+                type: 'content',
+                title: 'Density & Buoyancy',
+                content: [
+                    '<strong>Density:</strong> <span class="math">D = m / v</span>',
+                    '<strong>Archimedes:</strong> Buoyant force = Weight of fluid displaced.',
+                    '<strong>Sink/Float:</strong> Object Density > Fluid Density &rarr; Sink.'
+                ],
+                speedCheck: {
+                    question: 'If Mass = 100g and Volume = 50mL, what is Density?',
+                    answer: '2 g/mL'
+                }
+            },
+            {
+                type: 'content',
+                title: 'Nuclear Physics',
+                content: [
+                    '<strong>Alpha (&alpha;):</strong> Helium nucleus. Blocked by paper.',
+                    '<strong>Beta (&beta;):</strong> Electron. Blocked by aluminum.',
+                    '<strong>Gamma (&gamma;):</strong> Energy ray. Blocked by lead.',
+                    '<strong>Half-Life:</strong> Time for 50% decay.',
+                    '<strong>Fission (Split) vs. Fusion (Combine).</strong>'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Work & Power',
+                content: [
+                    '<strong>Work:</strong> <span class="math">W = F &times; d</span> (Joules)',
+                    '<strong>Power:</strong> <span class="math">P = W / t</span> (Watts)'
+                ],
+                speedCheck: {
+                    question: 'If you push a wall for an hour but it doesn\'t move, how much Work did you do?',
+                    answer: 'Zero. Distance = 0.'
+                }
+            },
+            {
+                type: 'content',
+                title: 'Solutions & Solubility',
+                content: [
+                    '<strong>Solute:</strong> Dissolved (Salt). <strong>Solvent:</strong> Dissolver (Water).',
+                    '<strong>Saturation:</strong> Unsaturated, Saturated, Supersaturated.',
+                    '<strong>Factors:</strong> Hotter usually dissolves more solid, but LESS gas.'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Chemical Reactions',
+                content: [
+                    '<strong>Types:</strong> Synthesis, Decomposition, Combustion, Single Replacement, Double Replacement.',
+                    '<strong>Redox:</strong> Transfer of electrons.',
+                    '<strong>OIL RIG:</strong> Oxidation Is Loss, Reduction Is Gain.'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Electromagnetic Spectrum',
+                content: [
+                    '<strong>Order (Low E &rarr; High E):</strong> Radio &rarr; Micro &rarr; IR &rarr; Visible &rarr; UV &rarr; X-Ray &rarr; Gamma.',
+                    '<strong>Photon Energy:</strong> <span class="math">E = hf</span>'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Thermodynamics',
+                content: [
+                    '<strong>Specific Heat (c):</strong> Resistance to temp change.',
+                    '<strong>Formula:</strong> <span class="math">q = mc&Delta;T</span>',
+                    '<strong>Endothermic:</strong> Absorbs heat (+q).',
+                    '<strong>Exothermic:</strong> Releases heat (-q).'
+                ]
+            },
+            {
+                type: 'module',
+                title: 'MODULE 3: Low Frequency',
+                subtitle: 'Focus: Advanced concepts and memorization.'
+            },
+            {
+                type: 'content',
+                title: 'Magnetism & Electricity',
+                content: [
+                    '<strong>Ferromagnetic:</strong> Iron, Nickel, Cobalt.',
+                    '<strong>Fields:</strong> North to South.',
+                    '<strong>Electromagnets:</strong> Moving charges create magnetic fields.',
+                    '<strong>Right Hand Rule:</strong> Direction of force.'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Momentum',
+                content: [
+                    '<strong>Formula:</strong> <span class="math">p = m &times; v</span>',
+                    '<strong>Collisions:</strong> Elastic (Bounce), Inelastic (Stick).',
+                    '<strong>Impulse:</strong> Change in momentum (F &times; t).'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Circular Motion & Torque',
+                content: [
+                    '<strong>Centripetal Force:</strong> Points to center.',
+                    '<strong>Torque:</strong> Turning Force. Force &times; Lever Arm.',
+                    '<strong>Balance:</strong> Clockwise Torque = Counter-Clockwise Torque.'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Organic Chemistry',
+                content: [
+                    '<strong>Alkanes:</strong> Single bonds. <strong>Alkenes:</strong> Double. <strong>Alkynes:</strong> Triple.',
+                    '<strong>Functional Groups:</strong> Alcohol (-OH), Carboxylic Acid (-COOH), Amine (-NH2).'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Modern Physics',
+                content: [
+                    '<strong>Heisenberg Uncertainty:</strong> Cannot know position and momentum perfectly.',
+                    '<strong>Pauli Exclusion:</strong> No two electrons same state.',
+                    '<strong>Einstein:</strong> E=mc&sup2;.'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Fluid Dynamics',
+                content: [
+                    '<strong>Bernoulli:</strong> Fast fluid = Low Pressure.',
+                    '<strong>Pascal:</strong> Pressure transmitted equally.',
+                    '<strong>Viscosity:</strong> Resistance to flow.'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'Electronics & Optics',
+                content: [
+                    '<strong>Components:</strong> Capacitor (Store), Inductor (Resist change), Diode (One way).',
+                    '<strong>Lenses:</strong> Concave (Diverge), Convex (Converge).',
+                    '<strong>Images:</strong> Real (Inverted), Virtual (Upright).'
+                ]
+            },
+            {
+                type: 'content',
+                title: 'History of Science',
+                content: [
+                    '<strong>Newton:</strong> Motion, Gravity.',
+                    '<strong>Mendeleev:</strong> Periodic Table.',
+                    '<strong>Curie:</strong> Radioactivity.',
+                    '<strong>Rutherford:</strong> Nucleus.',
+                    '<strong>Bohr:</strong> Atom Model.'
+                ]
+            },
+            {
+                type: 'title',
+                title: 'Final Review',
+                subtitle: 'Good Luck!',
+                goal: 'Remember: Units, Math, and Visuals.'
+            }
+        ];
+
+        let currentSlideIndex = 0;
+        const container = document.getElementById('slide-container');
+        const progressBar = document.getElementById('progress-bar');
+        const slideNumber = document.getElementById('slide-number');
+
+        function createSlideElement(slideData, index) {
+            const slide = document.createElement('div');
+            slide.className = 'slide';
+            if (index === 0) slide.classList.add('active');
+
+            if (slideData.type === 'title') {
+                slide.classList.add('title-slide');
+                slide.innerHTML = `
+                    <h1>${slideData.title}</h1>
+                    <h2>${slideData.subtitle}</h2>
+                    <div class="goal">${slideData.goal}</div>
+                `;
+            } else if (slideData.type === 'module') {
+                slide.classList.add('module-header');
+                slide.innerHTML = `
+                    <h1>${slideData.title}</h1>
+                    <p>${slideData.subtitle}</p>
+                `;
+            } else {
+                let contentHtml = slideData.content.map(item => `<li>${item}</li>`).join('');
+                let imageHtml = slideData.image ? `<div class="visual-cue"><img src="${slideData.image}" alt="Diagram"></div>` : '';
+                let speedCheckHtml = slideData.speedCheck ? `
+                    <div class="speed-check">
+                        <div class="speed-check-question">⚡ Speed Check: ${slideData.speedCheck.question}</div>
+                        <div class="speed-check-answer" id="answer-${index}">${slideData.speedCheck.answer}</div>
+                        <button class="reveal-btn" onclick="toggleAnswer(${index})">Reveal Answer</button>
+                    </div>
+                ` : '';
+
+                slide.innerHTML = `
+                    <h2>${slideData.title}</h2>
+                    <ul>${contentHtml}</ul>
+                    ${imageHtml}
+                    ${speedCheckHtml}
+                `;
+            }
+            return slide;
+        }
+
+        function initSlides() {
+            slidesData.forEach((data, index) => {
+                const slideEl = createSlideElement(data, index);
+                container.appendChild(slideEl);
+            });
+            updateProgress();
+        }
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.slide');
+            if (index >= 0 && index < slides.length) {
+                slides[currentSlideIndex].classList.remove('active');
+                currentSlideIndex = index;
+                slides[currentSlideIndex].classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function nextSlide() {
+            showSlide(currentSlideIndex + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlideIndex - 1);
+        }
+
+        function updateProgress() {
+            const progress = ((currentSlideIndex + 1) / slidesData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            slideNumber.textContent = `Slide ${currentSlideIndex + 1} / ${slidesData.length}`;
+        }
+
+        function toggleAnswer(index) {
+            const answerEl = document.getElementById(`answer-${index}`);
+            if (answerEl.style.display === 'block') {
+                answerEl.style.display = 'none';
+            } else {
+                answerEl.style.display = 'block';
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        initSlides();
+    </script>
+</body>
+</html>
