@@ -1,3 +1,8 @@
+---
+layout: default
+title: NSB MS Physics Science Guide
+---
+
 **How to use this outline:**
 *   **Slide Title:** The header of your slide.
 *   **Bullet Points:** The text content for the body of the slide.
