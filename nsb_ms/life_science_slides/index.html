@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,8 @@
         :root {
             --bg-color: #0f172a;
             --text-color: #f8fafc;
-            --accent-color: #4ade80; /* Green for Life Science */
+            --accent-color: #4ade80;
+            /* Green for Life Science */
             --secondary-color: #94a3b8;
             --highlight-color: #facc15;
             --code-bg: #1e293b;
@@ -52,7 +54,7 @@
             font-size: 3.5rem;
             margin-bottom: 0.5rem;
             color: var(--accent-color);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         h2 {
@@ -102,7 +104,7 @@
             max-height: 300px;
             max-width: 100%;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         .controls {
@@ -126,6 +128,21 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
+        #slide-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            max-width: 200px;
+        }
+
+        #slide-select option {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
         .progress-bar {
             position: absolute;
             bottom: 0;
@@ -145,24 +162,34 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
+
         /* Title Slide Specifics */
         .title-slide {
             text-align: center;
             align-items: center;
         }
+
         .title-slide h1 {
             font-size: 4.5rem;
             margin-bottom: 1rem;
         }
+
         .title-slide h2 {
             font-size: 2rem;
             border: none;
             color: var(--secondary-color);
         }
+
         .title-slide .goal {
             margin-top: 3rem;
             font-size: 1.5rem;
@@ -175,17 +202,19 @@
             align-items: center;
             background: linear-gradient(45deg, var(--bg-color), #1e293b);
         }
+
         .module-header h1 {
             font-size: 4rem;
         }
+
         .module-header p {
             font-size: 2rem;
             color: var(--secondary-color);
             font-style: italic;
         }
-
     </style>
 </head>
+
 <body>
 
     <div id="slide-container">
@@ -197,1262 +226,1295 @@
 
     <div class="controls">
         <button class="control-btn" onclick="prevSlide()">Previous</button>
+        <select id="slide-select" onchange="jumpToSlide(this.value)"></select>
         <button class="control-btn" onclick="nextSlide()">Next</button>
     </div>
 
     <script>
         const slidesData = [
-    {
-        "type": "title",
-        "title": "NSB MS Life Science Guide",
-        "subtitle": "Comprehensive Review of 100 Topics",
-        "goal": "Goal: Master the vocabulary and concepts for the National Science Bowl."
-    },
-    {
-        "type": "module",
-        "title": "SECTION 1: TIER 1 - THE \"MUST KNOWS\" (Topics 1-10)",
-        "subtitle": "These topics appear in almost every round. Mastery here is mandatory."
-    },
-    {
-        "type": "content",
-        "title": "1. Plant Vascular Systems",
-        "content": [
-            "<strong>Xylem:</strong> Transports water & dissolved minerals. Moves <strong>UP</strong> only (roots to leaves). Dead at maturity (Tracheids/Vessels).",
-            "<strong>Phloem:</strong> Transports sugars (photosynthate). Moves <strong>Up and Down</strong> (Source to Sink). Living cells (Sieve tubes)."
-        ],
-        "image_prompt": "Cross-section of a stem showing vascular bundles (Xylem inner, Phloem outer).",
-        "image_filename": "slide_1__plant_vascular_systems.png",
-        "image": "slide_1__plant_vascular_systems.png"
-    },
-    {
-        "type": "content",
-        "title": "2. Photosynthesis",
-        "content": [
-            "<strong>The Equation:</strong> 6CO\u2082 + 6H\u2082O + Light \u2192 C\u2086H\u2081\u2082O\u2086 + 6O\u2082.",
-            "<strong>Light Reactions:</strong> Occur in <strong>Thylakoids</strong>. Produce ATP, NADPH, and O\u2082.",
-            "<strong>Calvin Cycle (Dark Reactions):</strong> Occur in <strong>Stroma</strong>. Use ATP/NADPH to fix CO\u2082 into Glucose."
-        ],
-        "image_prompt": "Diagram of a Chloroplast labeling Thylakoid and Stroma.",
-        "image_filename": "slide_2__photosynthesis.png",
-        "image": "slide_2__photosynthesis.png"
-    },
-    {
-        "type": "content",
-        "title": "3. Eukaryotic Cell Organelles",
-        "content": [
-            "<strong>Mitochondria:</strong> Powerhouse (ATP production via Krebs Cycle/ETC). Maternal inheritance.",
-            "<strong>Ribosomes:</strong> Protein synthesis. Found in cytoplasm (free) or Rough ER (bound).",
-            "<strong>Lysosome:</strong> Digestion/Waste removal (enzymes).",
-            "<strong>Golgi:</strong> Packaging and shipping proteins."
-        ],
-        "image_prompt": "Animal cell diagram with lines pointing to these specific organelles.",
-        "image_filename": "slide_3__eukaryotic_cell_organelles.png",
-        "image": "slide_3__eukaryotic_cell_organelles.png"
-    },
-    {
-        "type": "content",
-        "title": "4. Mendelian Genetics",
-        "content": [
-            "<strong>Genotype vs. Phenotype:</strong> Genetic makeup vs. Physical traits.",
-            "<strong>Heterozygous (Bb) vs. Homozygous (BB or bb).</strong>",
-            "<strong>Laws:</strong> Segregation (alleles separate) and Independent Assortment."
-        ],
-        "image_prompt": "A 2x2 Punnett Square crossing two Heterozygotes (3:1 phenotype ratio).",
-        "image_filename": "slide_4__mendelian_genetics.png",
-        "image": "slide_4__mendelian_genetics.png"
-    },
-    {
-        "type": "content",
-        "title": "5. Mitosis & The Cell Cycle",
-        "content": [
-            "<strong>Goal:</strong> Growth and repair. Makes 2 identical diploid cells.",
-            "<strong>Interphase:</strong> G1, S (DNA replication), G2.",
-            "<strong>PMAT:</strong>",
-            "<strong>P</strong>rophase (Chromosomes condense).",
-            "<strong>M</strong>etaphase (Middle/Equator).",
-            "<strong>A</strong>naphase (Apart/Sister chromatids split).",
-            "<strong>T</strong>elophase (Two nuclei form)."
-        ],
-        "image_prompt": "The cell cycle pie chart and snapshots of the 4 mitotic phases.",
-        "image_filename": "slide_5__mitosis___the_cell_cycle.png",
-        "image": "slide_5__mitosis___the_cell_cycle.png"
-    },
-    {
-        "type": "content",
-        "title": "6. The Human Heart & Circulation",
-        "content": [
-            "<strong>Chambers:</strong> 4 (2 Atria receive, 2 Ventricles pump).",
-            "<strong>Flow:</strong> Right side = Deoxygenated (to lungs). Left side = Oxygenated (to body).",
-            "<strong>Vessels:</strong> Arteries (Away/Thick walls), Veins (Visit/Valves), Capillaries (Exchange)."
-        ],
-        "image_prompt": "Heart diagram with blue/red arrows indicating flow direction.",
-        "image_filename": "slide_6__the_human_heart___circulation.png",
-        "image": "slide_6__the_human_heart___circulation.png"
-    },
-    {
-        "type": "content",
-        "title": "7. DNA & RNA Structure",
-        "content": [
-            "<strong>DNA:</strong> Double helix, Deoxyribose, Thymine (A-T, C-G).",
-            "<strong>RNA:</strong> Single strand, Ribose, Uracil (A-U, C-G).",
-            "<strong>Central Dogma:</strong> DNA \u2192 (Transcription) \u2192 RNA \u2192 (Translation) \u2192 Protein."
-        ],
-        "image_prompt": "Double helix vs Single strand side-by-side.",
-        "image_filename": "slide_7__dna___rna_structure.png",
-        "image": "slide_7__dna___rna_structure.png"
-    },
-    {
-        "type": "content",
-        "title": "8. Microbiology (Bacteria)",
-        "content": [
-            "<strong>Prokaryotic:</strong> No nucleus, no membrane-bound organelles.",
-            "<strong>Shapes:</strong> Cocci (Sphere), Bacilli (Rod), Spirilla (Spiral).",
-            "<strong>Cell Wall:</strong> Peptidoglycan (Gram+ = Purple/Thick; Gram- = Pink/Thin)."
-        ],
-        "image_prompt": "Microscope images of the three bacterial shapes.",
-        "image_filename": "slide_8__microbiology__bacteria_.png",
-        "image": "slide_8__microbiology__bacteria_.png"
-    },
-    {
-        "type": "content",
-        "title": "9. Nervous System",
-        "content": [
-            "<strong>CNS:</strong> Brain + Spinal Cord.",
-            "<strong>Brain Parts:</strong> Cerebrum (Thought), Cerebellum (Balance/Coordination), Brainstem/Medulla (Involuntary: breathing/heart).",
-            "<strong>Neuron:</strong> Dendrite (receives) \u2192 Cell Body \u2192 Axon (sends) \u2192 Synapse."
-        ],
-        "image_prompt": "Diagram of a Neuron and a side profile of the brain.",
-        "image_filename": "slide_9__nervous_system.png",
-        "image": "slide_9__nervous_system.png"
-    },
-    {
-        "type": "module",
-        "title": "SECTION 2: TIER 2 - MODERATE YIELD (Topics 11-25)",
-        "subtitle": "These distinguish the good teams from the great teams."
-    },
-    {
-        "type": "content",
-        "title": "10. Taxonomy & Domains",
-        "content": [
-            "<strong>3 Domains:</strong> Bacteria, Archaea (Extremophiles), Eukarya.",
-            "<strong>Kingdoms of Eukarya:</strong> Protista, Fungi, Plantae, Animalia.",
-            "<strong>Hierarchy:</strong> Domain, Kingdom, Phylum, Class, Order, Family, Genus, Species (D-K-P-C-O-F-G-S).",
-            "These distinguish the good teams from the great teams.*"
-        ],
-        "image_prompt": "An inverted pyramid showing the hierarchy from Domain to Species.",
-        "image_filename": "slide_10__taxonomy___domains.png",
-        "image": "slide_10__taxonomy___domains.png"
-    },
-    {
-        "type": "content",
-        "title": "11. Enzymes",
-        "content": [
-            "<strong>Function:</strong> Biological catalysts (lower activation energy).",
-            "<strong>Structure:</strong> Substrate binds to Active Site (Lock & Key).",
-            "<strong>Sensitivity:</strong> Affected by pH and Temperature (can Denature/unfold)."
-        ],
-        "image_prompt": "Graph of Reaction Rate vs. Activation Energy (with and without enzyme).",
-        "image_filename": "slide_11__enzymes.png",
-        "image": "slide_11__enzymes.png"
-    },
-    {
-        "type": "content",
-        "title": "12. Symbiosis",
-        "content": [
-            "<strong>Mutualism (+/+):</strong> Both benefit (e.g., Nitrogen-fixing bacteria & legumes).",
-            "<strong>Commensalism (+/0):</strong> One benefits, one unaffected (e.g., Barnacles on whales).",
-            "<strong>Parasitism (+/-):</strong> One benefits, host harmed (e.g., Ticks, Tapeworms)."
-        ],
-        "image_prompt": "Simple icons (smiley faces) representing the interaction outcomes.",
-        "image_filename": "slide_12__symbiosis.png",
-        "image": "slide_12__symbiosis.png"
-    },
-    {
-        "type": "content",
-        "title": "13. Blood Components",
-        "content": [
-            "<strong>Erythrocytes (RBC):</strong> Carry O\u2082 via Hemoglobin. No nucleus.",
-            "<strong>Leukocytes (WBC):</strong> Fight infection (Immune system).",
-            "<strong>Thrombocytes (Platelets):</strong> Clotting.",
-            "<strong>Plasma:</strong> Fluid matrix (water, proteins, salts)."
-        ],
-        "image_prompt": "A smear slide image of blood showing the size difference between RBCs and WBCs.",
-        "image_filename": "slide_13__blood_components.png",
-        "image": "slide_13__blood_components.png"
-    },
-    {
-        "type": "content",
-        "title": "14. Plant Reproduction (Flowers)",
-        "content": [
-            "<strong>Stamen (Male):</strong> Anther (pollen) + Filament.",
-            "<strong>Pistil/Carpel (Female):</strong> Stigma (sticky top), Style (tube), Ovary (becomes fruit)."
-        ],
-        "image_prompt": "Detailed flower anatomy diagram.",
-        "image_filename": "slide_14__plant_reproduction__flowers_.png",
-        "image": "slide_14__plant_reproduction__flowers_.png"
-    },
-    {
-        "type": "content",
-        "title": "15. Meiosis",
-        "content": [
-            "<strong>Purpose:</strong> Sexual reproduction (Gametes).",
-            "<strong>Process:</strong> 2 Divisions (Meiosis I & II).",
-            "<strong>Result:</strong> 4 Haploid cells (n).",
-            "<strong>Variation:</strong> Crossing Over occurs in Prophase I."
-        ],
-        "image_prompt": "Diagram showing homologous pairs separating vs. sister chromatids separating.",
-        "image_filename": "slide_15__meiosis.png",
-        "image": "slide_15__meiosis.png"
-    },
-    {
-        "type": "content",
-        "title": "16. Arthropods",
-        "content": [
-            "<strong>Characteristics:</strong> Jointed appendages, Segmented body, Chitin exoskeleton.",
-            "<strong>Classes:</strong> Insecta (3 body parts, 6 legs), Arachnida (2 body parts, 8 legs), Crustacea (Gills, 2 pairs antennae)."
-        ],
-        "image_prompt": "Comparison photo of a Grasshopper, Spider, and Crab.",
-        "image_filename": "slide_16__arthropods.png",
-        "image": "slide_16__arthropods.png"
-    },
-    {
-        "type": "content",
-        "title": "17. Endocrine System",
-        "content": [
-            "<strong>Pancreas:</strong> Insulin (lowers blood sugar), Glucagon (raises it).",
-            "<strong>Adrenal:</strong> Epinephrine/Adrenaline (Stress).",
-            "<strong>Pituitary:</strong> Master gland (Growth hormone).",
-            "<strong>Thyroid:</strong> Metabolism (Thyroxine)."
-        ],
-        "image_prompt": "Human body outline showing gland locations.",
-        "image_filename": "slide_17__endocrine_system.png",
-        "image": "slide_17__endocrine_system.png"
-    },
-    {
-        "type": "content",
-        "title": "18. Biomes",
-        "content": [
-            "<strong>Tundra:</strong> Permafrost, no trees.",
-            "<strong>Taiga (Boreal):</strong> Conifers, cold winters.",
-            "<strong>Deciduous Forest:</strong> Trees lose leaves.",
-            "<strong>Rainforest:</strong> High biodiversity, poor soil."
-        ],
-        "image_prompt": "World map color-coded by biome.",
-        "image_filename": "slide_18__biomes.png",
-        "image": "slide_18__biomes.png"
-    },
-    {
-        "type": "content",
-        "title": "19. Cellular Respiration",
-        "content": [
-            "<strong>Glycolysis:</strong> Cytoplasm. Glucose \u2192 Pyruvate (2 ATP).",
-            "<strong>Krebs Cycle:</strong> Matrix. Makes NADH/FADH\u2082.",
-            "<strong>ETC:</strong> Inner Membrane. Makes ~32-34 ATP. Requires Oxygen."
-        ],
-        "image_prompt": "Flowchart of the three stages and ATP yield.",
-        "image_filename": "slide_19__cellular_respiration.png",
-        "image": "slide_19__cellular_respiration.png"
-    },
-    {
-        "type": "content",
-        "title": "20. Biochemistry (Macromolecules)",
-        "content": [
-            "<strong>Carbohydrates:</strong> Monosaccharides (Glucose). Energy.",
-            "<strong>Lipids:</strong> Fatty acids. Membranes/Storage.",
-            "<strong>Proteins:</strong> Amino Acids (Peptide bonds). Enzymes/Structure.",
-            "<strong>Nucleic Acids:</strong> Nucleotides. Heredity."
-        ],
-        "image_prompt": "Chemical structure skeletons of a sugar, lipid, and amino acid.",
-        "image_filename": "slide_20__biochemistry__macromolecules_.png",
-        "image": "slide_20__biochemistry__macromolecules_.png"
-    },
-    {
-        "type": "content",
-        "title": "21. Plant Groups",
-        "content": [
-            "<strong>Bryophytes:</strong> Mosses (Non-vascular).",
-            "<strong>Pteridophytes:</strong> Ferns (Vascular, spores).",
-            "<strong>Gymnosperms:</strong> \"Naked seed\" (Conifers).",
-            "<strong>Angiosperms:</strong> Flowering plants (Fruits)."
-        ],
-        "image_prompt": "Evolutionary tree of plants (Cladogram).",
-        "image_filename": "slide_21__plant_groups.png",
-        "image": "slide_21__plant_groups.png"
-    },
-    {
-        "type": "content",
-        "title": "22. Viruses",
-        "content": [
-            "<strong>Structure:</strong> Capsid (protein) + DNA or RNA. Non-living.",
-            "<strong>Bacteriophage:</strong> Virus that infects bacteria.",
-            "<strong>Retrovirus:</strong> Uses Reverse Transcriptase (RNA \u2192 DNA). Example: HIV."
-        ],
-        "image_prompt": "Diagram of a Bacteriophage (Alien lander shape).",
-        "image_filename": "slide_22__viruses.png",
-        "image": "slide_22__viruses.png"
-    },
-    {
-        "type": "content",
-        "title": "23. Evolution Concepts",
-        "content": [
-            "<strong>Natural Selection:</strong> \"Survival of the fittest.\"",
-            "<strong>Homologous Structures:</strong> Same structure, different function (Bat wing/Human arm) = Common Ancestor.",
-            "<strong>Analogous Structures:</strong> Different structure, same function (Bird wing/Butterfly wing) = Convergent Evolution."
-        ],
-        "image_prompt": "Comparison of forelimbs (human, cat, whale, bat).",
-        "image_filename": "slide_23__evolution_concepts.png",
-        "image": "slide_23__evolution_concepts.png"
-    },
-    {
-        "type": "content",
-        "title": "24. Digestive System",
-        "content": [
-            "<strong>Sequence:</strong> Mouth (Amylase) \u2192 Esophagus (Peristalsis) \u2192 Stomach (Pepsin/Acid) \u2192 Small Intestine (Absorption) \u2192 Large Intestine (Water).",
-            "<strong>Small Intestine:</strong> Duodenum (Digestion), Jejunum/Ileum (Absorption)."
-        ],
-        "image_prompt": "Diagram of the digestive tract.",
-        "image_filename": "slide_24__digestive_system.png",
-        "image": "slide_24__digestive_system.png"
-    },
-    {
-        "type": "module",
-        "title": "SECTION 3: TIER 3 - SPECIFIC TOPICS (Topics 26-50)",
-        "subtitle": "These questions often determine the winner of a close match."
-    },
-    {
-        "type": "content",
-        "title": "25. Kingdom Fungi",
-        "content": [
-            "<strong>Cell Wall:</strong> Chitin.",
-            "<strong>Structure:</strong> Hyphae (filaments) form Mycelium.",
-            "<strong>Nutrition:</strong> Heterotrophs (Saprotrophs/Decomposers) - absorptive nutrition.",
-            "<strong>Lichens:</strong> Symbiosis between Fungus + Algae/Cyanobacteria.",
-            "These questions often determine the winner of a close match.*"
-        ],
-        "image_prompt": "Photo of mushroom anatomy and a microscopic view of hyphae.",
-        "image_filename": "slide_25__kingdom_fungi.png",
-        "image": "slide_25__kingdom_fungi.png"
-    },
-    {
-        "type": "content",
-        "title": "26. Human Senses",
-        "content": [
-            "<strong>Eye:</strong> Retina (screen), Rods (B&W/Night), Cones (Color).",
-            "<strong>Ear:</strong> Tympanic Membrane (Eardrum), Cochlea (Hearing), Semicircular Canals (Balance)."
-        ],
-        "image_prompt": "Cross-section of the Eye and Ear.",
-        "image_filename": "slide_26__human_senses.png",
-        "image": "slide_26__human_senses.png"
-    },
-    {
-        "type": "content",
-        "title": "27. Muscular System",
-        "content": [
-            "<strong>Skeletal:</strong> Striated, Voluntary, Multinucleated.",
-            "<strong>Smooth:</strong> Non-striated, Involuntary (Organs).",
-            "<strong>Cardiac:</strong> Striated, Involuntary, Intercalated discs.",
-            "<strong>Contraction:</strong> Actin & Myosin (Sliding Filament Theory)."
-        ],
-        "image_prompt": "Microscopic views of the three muscle types.",
-        "image_filename": "slide_27__muscular_system.png",
-        "image": "slide_27__muscular_system.png"
-    },
-    {
-        "type": "content",
-        "title": "28. Excretory System",
-        "content": [
-            "<strong>Kidney:</strong> Filters blood.",
-            "<strong>Nephron:</strong> Functional unit.",
-            "<strong>Glomerulus:</strong> Filtration site.",
-            "<strong>Loop of Henle:</strong> Water reabsorption."
-        ],
-        "image_prompt": "Diagram of a Nephron.",
-        "image_filename": "slide_28__excretory_system.png",
-        "image": "slide_28__excretory_system.png"
-    },
-    {
-        "type": "content",
-        "title": "29. Protists",
-        "content": [
-            "<strong>Animal-like (Protozoa):</strong> Amoeba (pseudopods), Paramecium (cilia).",
-            "<strong>Plant-like (Algae):</strong> Diatoms (silica shells), Euglena (eye spot)."
-        ],
-        "image_prompt": "Photos of Amoeba, Paramecium, and Euglena.",
-        "image_filename": "slide_29__protists.png",
-        "image": "slide_29__protists.png"
-    },
-    {
-        "type": "content",
-        "title": "30. Human Bones",
-        "content": [
-            "<strong>Arm:</strong> Humerus, Radius, Ulna.",
-            "<strong>Leg:</strong> Femur (largest), Tibia, Fibula.",
-            "<strong>Torso:</strong> Clavicle (collarbone), Sternum, Scapula."
-        ],
-        "image_prompt": "Skeleton diagram with major bones labeled.",
-        "image_filename": "slide_30__human_bones.png",
-        "image": "slide_30__human_bones.png"
-    },
-    {
-        "type": "content",
-        "title": "31. Invertebrate Phyla",
-        "content": [
-            "<strong>Porifera:</strong> Sponges (No tissues).",
-            "<strong>Cnidaria:</strong> Jellyfish/Coral (Stinging cells/Nematocysts).",
-            "<strong>Mollusca:</strong> Soft body, Mantle, Foot (Snails, Clams, Squid).",
-            "<strong>Echinodermata:</strong> Spiny skin, Water vascular system (Starfish)."
-        ],
-        "image_prompt": "Photo collage of one animal from each phylum.",
-        "image_filename": "slide_31__invertebrate_phyla.png",
-        "image": "slide_31__invertebrate_phyla.png"
-    },
-    {
-        "type": "content",
-        "title": "32. Plant Growth",
-        "content": [
-            "<strong>Meristem:</strong> Region of cell division (Tip of root/shoot).",
-            "<strong>Primary Growth:</strong> Length (Apical meristem).",
-            "<strong>Secondary Growth:</strong> Girth/Width (Cambium).",
-            "<strong>Tropisms:</strong> Phototropism (Light), Gravitropism (Gravity), Thigmotropism (Touch)."
-        ],
-        "image_prompt": "Diagram of a root tip showing the meristem.",
-        "image_filename": "slide_32__plant_growth.png",
-        "image": "slide_32__plant_growth.png"
-    },
-    {
-        "type": "content",
-        "title": "33. Cellular Transport",
-        "content": [
-            "<strong>Passive:</strong> High to Low concentration. No Energy. (Diffusion, Osmosis).",
-            "<strong>Active:</strong> Low to High. Requires ATP. (Sodium-Potassium Pump).",
-            "<strong>Hypertonic:</strong> Water leaves cell (shrivels).",
-            "<strong>Hypotonic:</strong> Water enters cell (swells/bursts)."
-        ],
-        "image_prompt": "Beakers showing cells in Hyper/Hypo/Isotonic solutions.",
-        "image_filename": "slide_33__cellular_transport.png",
-        "image": "slide_33__cellular_transport.png"
-    },
-    {
-        "type": "content",
-        "title": "34. Vertebrate Classes",
-        "content": [
-            "<strong>Agnatha:</strong> Jawless fish (Lamprey).",
-            "<strong>Chondrichthyes:</strong> Cartilage fish (Sharks).",
-            "<strong>Osteichthyes:</strong> Bony fish.",
-            "<strong>Amphibia:</strong> Double life (Water/Land), moist skin.",
-            "<strong>Reptilia:</strong> Scaly skin, Amniotic egg.",
-            "<strong>Aves:</strong> Birds, endothermic.",
-            "<strong>Mammalia:</strong> Hair, mammary glands."
-        ],
-        "image_prompt": "Evolutionary tree of vertebrates.",
-        "image_filename": "slide_34__vertebrate_classes.png",
-        "image": "slide_34__vertebrate_classes.png"
-    },
-    {
-        "type": "content",
-        "title": "35. Parasitology",
-        "content": [
-            "<strong>Vector:</strong> Organism that transmits disease (Mosquito = Malaria).",
-            "<strong>Host:</strong> Organism the parasite lives on.",
-            "<strong>Platyhelminthes:</strong> Tapeworms, Flukes.",
-            "<strong>Nematodes:</strong> Roundworms (Hookworm)."
-        ],
-        "image_prompt": "Diagram of the Malaria life cycle.",
-        "image_filename": "slide_35__parasitology.png",
-        "image": "slide_35__parasitology.png"
-    },
-    {
-        "type": "content",
-        "title": "36. Cell Membrane Structure",
-        "content": [
-            "<strong>Phospholipid Bilayer:</strong> Hydrophilic heads (out), Hydrophobic tails (in).",
-            "<strong>Fluid Mosaic Model:</strong> Proteins float in the lipid sea.",
-            "<strong>Semi-permeable:</strong> Controls what enters/exits."
-        ],
-        "image_prompt": "3D rendering of the cell membrane.",
-        "image_filename": "slide_36__cell_membrane_structure.png",
-        "image": "slide_36__cell_membrane_structure.png"
-    },
-    {
-        "type": "content",
-        "title": "37. History of Biology",
-        "content": [
-            "<strong>Hooke:</strong> Named \"Cells\" (cork).",
-            "<strong>Leeuwenhoek:</strong> First to see living cells (microscope).",
-            "<strong>Pasteur:</strong> Disproved spontaneous generation (germ theory).",
-            "<strong>Watson, Crick, Franklin:</strong> DNA Structure."
-        ],
-        "image_prompt": "Photos of these scientists.",
-        "image_filename": "slide_37__history_of_biology.png",
-        "image": "slide_37__history_of_biology.png"
-    },
-    {
-        "type": "content",
-        "title": "38. Genetic Mutations",
-        "content": [
-            "<strong>Point Mutation:</strong> One base change (Substitution).",
-            "<strong>Frameshift:</strong> Insertion or Deletion (changes everything after).",
-            "<strong>Chromosomal:</strong>",
-            "<strong>Nondisjunction:</strong> Failure to separate (Down Syndrome/Trisomy 21)."
-        ],
-        "image_prompt": "Diagram comparing Point vs. Frameshift mutation effects.",
-        "image_filename": "slide_38__genetic_mutations.png",
-        "image": "slide_38__genetic_mutations.png"
-    },
-    {
-        "type": "content",
-        "title": "39. Biogeochemical Cycles",
-        "content": [
-            "<strong>Carbon:</strong> Photosynthesis vs. Respiration vs. Combustion.",
-            "<strong>Nitrogen:</strong> Fixation (Bacteria convert N\u2082 gas to Ammonia/Nitrate for plants).",
-            "<strong>Water:</strong> Evaporation, Transpiration, Precipitation."
-        ],
-        "image_prompt": "Diagram of the Nitrogen Cycle (focus on bacteria's role).",
-        "image_filename": "slide_39__biogeochemical_cycles.png",
-        "image": "slide_39__biogeochemical_cycles.png"
-    },
-    {
-        "type": "content",
-        "title": "40. Immune System",
-        "content": [
-            "<strong>Antigen:</strong> Foreign marker (Identifier).",
-            "<strong>Antibody:</strong> Protein made by B-Cells to tag antigens (Y-shaped).",
-            "<strong>T-Cells:</strong> Helper (signals), Cytotoxic (kills).",
-            "<strong>Vaccine:</strong> Introduces antigen to build memory."
-        ],
-        "image_prompt": "Diagram of an Antibody binding to an Antigen.",
-        "image_filename": "slide_40__immune_system.png",
-        "image": "slide_40__immune_system.png"
-    },
-    {
-        "type": "content",
-        "title": "41. Plant Hormones",
-        "content": [
-            "<strong>Auxin:</strong> Growth, phototropism.",
-            "<strong>Ethylene:</strong> Fruit ripening (gas).",
-            "<strong>Gibberellins:</strong> Stem elongation, germination.",
-            "<strong>Abscisic Acid:</strong> Stress response, closes stomata."
-        ],
-        "image_prompt": "Photo of a plant bending toward light (Auxin effect).",
-        "image_filename": "slide_41__plant_hormones.png",
-        "image": "slide_41__plant_hormones.png"
-    },
-    {
-        "type": "content",
-        "title": "42. Protein Synthesis (The Details)",
-        "content": [
-            "<strong>Transcription:</strong> DNA \u2192 mRNA (in Nucleus).",
-            "<strong>Translation:</strong> mRNA \u2192 Protein (at Ribosome).",
-            "<strong>Codon:</strong> 3 bases on mRNA.",
-            "<strong>Anticodon:</strong> 3 bases on tRNA (carries Amino Acid)."
-        ],
-        "image_prompt": "Diagram of the Translation process at the ribosome.",
-        "image_filename": "slide_42__protein_synthesis__the_details_.png",
-        "image": "slide_42__protein_synthesis__the_details_.png"
-    },
-    {
-        "type": "content",
-        "title": "43. Ecological Interactions",
-        "content": [
-            "<strong>Food Chain:</strong> Producer \u2192 Primary Consumer \u2192 Secondary Consumer.",
-            "<strong>10% Rule:</strong> Only 10% of energy moves up to the next level.",
-            "<strong>Food Web:</strong> Interconnected chains."
-        ],
-        "image_prompt": "An energy pyramid showing the 10% rule.",
-        "image_filename": "slide_43__ecological_interactions.png",
-        "image": "slide_43__ecological_interactions.png"
-    },
-    {
-        "type": "content",
-        "title": "44. Human Teeth",
-        "content": [
-            "<strong>Incisors:</strong> Cutting (Front).",
-            "<strong>Canines:</strong> Tearing (Pointy).",
-            "<strong>Premolars/Molars:</strong> Grinding (Back).",
-            "<strong>Formula:</strong> 2-1-2-3 (Adults)."
-        ],
-        "image_prompt": "Diagram of the jaw labeling tooth types.",
-        "image_filename": "slide_44__human_teeth.png",
-        "image": "slide_44__human_teeth.png"
-    },
-    {
-        "type": "content",
-        "title": "45. Fish Anatomy",
-        "content": [
-            "<strong>Operculum:</strong> Cover for gills.",
-            "<strong>Swim Bladder:</strong> Buoyancy control.",
-            "<strong>Lateral Line:</strong> Detects vibration/pressure."
-        ],
-        "image_prompt": "Internal anatomy diagram of a bony fish.",
-        "image_filename": "slide_45__fish_anatomy.png",
-        "image": "slide_45__fish_anatomy.png"
-    },
-    {
-        "type": "content",
-        "title": "46. Population Ecology",
-        "content": [
-            "<strong>Carrying Capacity (K):</strong> Max population an environment can support.",
-            "<strong>Exponential Growth:</strong> J-curve.",
-            "<strong>Logistic Growth:</strong> S-curve (levels off at K)."
-        ],
-        "image_prompt": "Graph comparing J-curve and S-curve.",
-        "image_filename": "slide_46__population_ecology.png",
-        "image": "slide_46__population_ecology.png"
-    },
-    {
-        "type": "content",
-        "title": "47. Respiratory System",
-        "content": [
-            "<strong>Alveoli:</strong> Air sacs, site of gas exchange.",
-            "<strong>Diaphragm:</strong> Muscle that controls breathing.",
-            "<strong>Trachea:</strong> Windpipe (cartilage rings)."
-        ],
-        "image_prompt": "Diagram of the lungs zooming in on Alveoli.",
-        "image_filename": "slide_47__respiratory_system.png",
-        "image": "slide_47__respiratory_system.png"
-    },
-    {
-        "type": "content",
-        "title": "48. Animal Behavior",
-        "content": [
-            "<strong>Innate:</strong> Instinct/Born with it.",
-            "<strong>Imprinting:</strong> Learning at a critical period (Geese following mom).",
-            "<strong>Habituation:</strong> Ignoring a repeated stimulus."
-        ],
-        "image_prompt": "Photo of Konrad Lorenz with his geese (Imprinting).",
-        "image_filename": "slide_48__animal_behavior.png",
-        "image": "slide_48__animal_behavior.png"
-    },
-    {
-        "type": "content",
-        "title": "49. Biotechnology",
-        "content": [
-            "<strong>PCR:</strong> Polymerase Chain Reaction (copies DNA fast).",
-            "<strong>Gel Electrophoresis:</strong> Separates DNA by size (DNA is negative, moves to positive).",
-            "<strong>Restriction Enzymes:</strong> Cut DNA at specific sequences."
-        ],
-        "image_prompt": "Image of a Gel Electrophoresis result.",
-        "image_filename": "slide_49__biotechnology.png",
-        "image": "slide_49__biotechnology.png"
-    },
-    {
-        "type": "module",
-        "title": "SECTION 4: TIER 4 - RAPID FIRE (Topics 51-100)",
-        "subtitle": "These slides cover brief facts. Good for \"Speed Rounds.\""
-    },
-    {
-        "type": "content",
-        "title": "50. Cell Junctions",
-        "content": [
-            "<strong>Gap Junctions:</strong> Channels between animal cells (communication).",
-            "<strong>Tight Junctions:</strong> Watertight seal (animal cells).",
-            "<strong>Plasmodesmata:</strong> Channels between plant cells (through cell walls).",
-            "These slides cover brief facts. Good for \"Speed Rounds.\"*"
-        ],
-        "image_prompt": "Diagram comparing Gap junctions and Plasmodesmata.",
-        "image_filename": "slide_50__cell_junctions.png",
-        "image": "slide_50__cell_junctions.png"
-    },
-    {
-        "type": "content",
-        "title": "51. Liver",
-        "content": [
-            "Produces <strong>Bile</strong> (emulsifies fat).",
-            "Detoxifies blood.",
-            "Stores Glycogen."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "52. Pancreas",
-        "content": [
-            "Digestive: Secretes enzymes into small intestine.",
-            "Endocrine: Islets of Langerhans make Insulin/Glucagon."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "53. Leaf Anatomy",
-        "content": [
-            "<strong>Stomata:</strong> Pores for gas exchange.",
-            "<strong>Guard Cells:</strong> Open/close stomata.",
-            "<strong>Mesophyll:</strong> Photosynthetic tissue."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "54. Reproductive System",
-        "content": [
-            "<strong>Gametes:</strong> Sperm and Egg (Haploid).",
-            "<strong>Zygote:</strong> Fertilized egg (Diploid).",
-            "<strong>Gonads:</strong> Testes and Ovaries."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "55. Integumentary System (Skin)",
-        "content": [
-            "<strong>Epidermis:</strong> Outer layer.",
-            "<strong>Keratin:</strong> Waterproofing protein.",
-            "<strong>Melanin:</strong> Pigment (UV protection)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "56. Connective Tissue",
-        "content": [
-            "<strong>Ligament:</strong> Bone to Bone.",
-            "<strong>Tendon:</strong> Muscle to Bone.",
-            "<strong>Cartilage:</strong> Cushioning (no blood supply)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "57. Birds (Aves)",
-        "content": [
-            "<strong>Adaptations for Flight:</strong> Hollow bones, no teeth, air sacs.",
-            "<strong>Crop:</strong> Stores food.",
-            "<strong>Gizzard:</strong> Grinds food."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "58. Insect Metamorphosis",
-        "content": [
-            "<strong>Complete:</strong> Egg \u2192 Larva \u2192 Pupa \u2192 Adult (Butterfly).",
-            "<strong>Incomplete:</strong> Egg \u2192 Nymph \u2192 Adult (Grasshopper)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "59. Marine Biology",
-        "content": [
-            "<strong>Phytoplankton:</strong> Plant-like (producers).",
-            "<strong>Zooplankton:</strong> Animal-like (consumers).",
-            "<strong>Benthic:</strong> Bottom dwellers."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "60. Prions",
-        "content": [
-            "Infectious <strong>Proteins</strong> (no DNA/RNA).",
-            "Causes Mad Cow Disease."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "61. Vitamins",
-        "content": [
-            "<strong>Fat Soluble:</strong> A, D, E, K.",
-            "<strong>Water Soluble:</strong> B, C.",
-            "<strong>Scurvy:</strong> Lack of Vitamin C."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "62. Fermentation",
-        "content": [
-            "Anaerobic (No Oxygen).",
-            "<strong>Lactic Acid:</strong> Muscle cells, yogurt.",
-            "<strong>Alcoholic:</strong> Yeast (Ethanol + CO\u2082)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "63. Glycolysis",
-        "content": [
-            "Occurs in Cytoplasm.",
-            "Anaerobic.",
-            "Net Gain: <strong>2 ATP</strong>."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "64. Cytoskeleton",
-        "content": [
-            "<strong>Microtubules:</strong> Tubulin (Spindle fibers, flagella).",
-            "<strong>Microfilaments:</strong> Actin (Movement, shape)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "65. Antibiotics",
-        "content": [
-            "Kill Bacteria (NOT viruses).",
-            "Target cell walls or ribosomes.",
-            "<strong>Penicillin:</strong> First antibiotic (Fleming)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "66. Mimicry",
-        "content": [
-            "<strong>Batesian:</strong> Harmless mimics Harmful (Fly looks like Wasp).",
-            "<strong>Mullerian:</strong> Two harmful species look alike (Bee and Wasp)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "67. Seed Germination",
-        "content": [
-            "Needs: Water, Oxygen, Warmth (Usually NO light needed).",
-            "<strong>Radicle:</strong> First root to emerge."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "68. Soil Science",
-        "content": [
-            "<strong>Humus:</strong> Decaying organic matter.",
-            "<strong>Loam:</strong> Best for plants (Sand/Silt/Clay mix)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "69. Classification",
-        "content": [
-            "<strong>Binomial Nomenclature:</strong> *Genus species*.",
-            "Developed by Carolus Linnaeus."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "70. Endosymbiotic Theory",
-        "content": [
-            "Mitochondria/Chloroplasts were once free-living bacteria.",
-            "Evidence: They have their own circular DNA and ribosomes."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "71. Feedback Loops",
-        "content": [
-            "<strong>Negative:</strong> Maintains homeostasis (Body temp, Blood sugar).",
-            "<strong>Positive:</strong> Amplifies change (Childbirth contractions, Blood clotting)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "72. Blood Pressure",
-        "content": [
-            "<strong>Systolic:</strong> Heart contracts (Top number).",
-            "<strong>Diastolic:</strong> Heart relaxes (Bottom number)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "73. Invasive Species",
-        "content": [
-            "Non-native.",
-            "No natural predators.",
-            "Examples: Kudzu, Zebra Mussel."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "74. Speciation",
-        "content": [
-            "<strong>Allopatric:</strong> Geographic separation.",
-            "<strong>Sympatric:</strong> Same area (often polyploidy in plants)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "75. Chemical Bonds",
-        "content": [
-            "<strong>Peptide:</strong> Holds Amino Acids together.",
-            "<strong>Hydrogen:</strong> Holds DNA bases together."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "76. Genetic Disorders",
-        "content": [
-            "<strong>Hemophilia/Color Blindness:</strong> Sex-linked (X).",
-            "<strong>Cystic Fibrosis:</strong> Autosomal Recessive.",
-            "<strong>Huntington's:</strong> Autosomal Dominant."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "77. Action Potential",
-        "content": [
-            "<strong>Sodium (Na+):</strong> Rushes IN (Depolarization).",
-            "<strong>Potassium (K+):</strong> Rushes OUT (Repolarization)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "78. Staining",
-        "content": [
-            "<strong>Gram Positive:</strong> Purple (Thick wall).",
-            "<strong>Gram Negative:</strong> Pink (Thin wall)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "79. Microscopy",
-        "content": [
-            "<strong>SEM:</strong> Scanning Electron (Surface/3D).",
-            "<strong>TEM:</strong> Transmission Electron (Inside/2D)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "80. Body Symmetry",
-        "content": [
-            "<strong>Radial:</strong> Wheel-like (Jellyfish, Starfish).",
-            "<strong>Bilateral:</strong> Left/Right sides (Humans, Insects)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "81. Plant Pigments",
-        "content": [
-            "<strong>Chlorophyll:</strong> Green.",
-            "<strong>Carotenoids:</strong> Orange/Yellow.",
-            "<strong>Anthocyanins:</strong> Red/Purple."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "82. Fruits vs. Vegetables",
-        "content": [
-            "<strong>Botanical Fruit:</strong> Ripened ovary, contains seeds (Tomato, Cucumber).",
-            "<strong>Vegetable:</strong> Vegetative part (Root, Stem, Leaf)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "83. Gene Expression",
-        "content": [
-            "<strong>Operon:</strong> Gene cluster in bacteria (Lac Operon).",
-            "<strong>Introns:</strong> \"Junk\" RNA (removed).",
-            "<strong>Exons:</strong> Expressed RNA (kept)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "84. Nitrogenous Waste",
-        "content": [
-            "<strong>Ammonia:</strong> Fish (Toxic).",
-            "<strong>Urea:</strong> Mammals (Medium).",
-            "<strong>Uric Acid:</strong> Birds/Reptiles (Solid, low water loss)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "85. Thermoregulation",
-        "content": [
-            "<strong>Ectotherm:</strong> \"Cold blooded\" (Reptiles, Fish).",
-            "<strong>Endotherm:</strong> \"Warm blooded\" (Mammals, Birds)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "86. Apoptosis",
-        "content": [
-            "Programmed Cell Death.",
-            "Examples: Tadpole tail removal, separating fingers in embryo."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "87. Root Types",
-        "content": [
-            "<strong>Taproot:</strong> One main root (Dicots/Carrot).",
-            "<strong>Fibrous:</strong> Many small roots (Monocots/Grass)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "88. Modified Stems",
-        "content": [
-            "<strong>Tuber:</strong> Potato.",
-            "<strong>Rhizome:</strong> Horizontal underground stem (Ginger).",
-            "<strong>Bulb:</strong> Onion."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "89. Brain Lobes",
-        "content": [
-            "<strong>Frontal:</strong> Reasoning.",
-            "<strong>Occipital:</strong> Vision.",
-            "<strong>Temporal:</strong> Hearing.",
-            "<strong>Parietal:</strong> Touch/Sensory."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "90. Hearing Mechanism",
-        "content": [
-            "<strong>Cochlea:</strong> Snail-shaped, fluid-filled.",
-            "<strong>Organ of Corti:</strong> Hair cells (receptors)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "91. Taste & Smell",
-        "content": [
-            "<strong>Olfactory:</strong> Smell.",
-            "<strong>Gustatory:</strong> Taste.",
-            "Both are Chemoreceptors."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "92. Antibody Types",
-        "content": [
-            "<strong>IgG:</strong> Most common.",
-            "<strong>IgA:</strong> Secretions (tears/saliva).",
-            "<strong>IgE:</strong> Allergies."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "93. Stem Cells",
-        "content": [
-            "<strong>Totipotent:</strong> Can be anything (Zygote).",
-            "<strong>Pluripotent:</strong> Can be almost anything (Embryonic).",
-            "<strong>Multipotent:</strong> Limited (Adult bone marrow)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "94. Extremophiles",
-        "content": [
-            "<strong>Thermophile:</strong> Heat lover.",
-            "<strong>Halophile:</strong> Salt lover.",
-            "<strong>Acidophile:</strong> Acid lover."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "95. Circadian Rhythms",
-        "content": [
-            "24-hour cycle.",
-            "Controlled by Pineal Gland (Melatonin)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "96. Pheromones",
-        "content": [
-            "Chemical signals used for communication *outside* the body (Ant trails)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "97. Keystone Species",
-        "content": [
-            "Species with disproportionately large effect on environment (e.g., Sea Otter, Beaver)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "98. Tropisms (Movement)",
-        "content": [
-            "<strong>Thigmotropism:</strong> Response to Touch (Vines).",
-            "<strong>Gravitropism:</strong> Response to Gravity (Roots go down)."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "99. Fossils",
-        "content": [
-            "<strong>Index Fossil:</strong> Widespread, short lived (used for dating layers).",
-            "Example: Trilobite."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "content",
-        "title": "100. Scientific Method",
-        "content": [
-            "<strong>Independent Variable:</strong> What you change (X-axis).",
-            "<strong>Dependent Variable:</strong> What you measure (Y-axis).",
-            "<strong>Control:</strong> Baseline for comparison."
-        ],
-        "image_prompt": null,
-        "image_filename": null
-    },
-    {
-        "type": "title",
-        "title": "Final Review",
-        "subtitle": "Good Luck!",
-        "goal": "Keep practicing these topics!"
-    }
-];
+            {
+                "type": "title",
+                "title": "NSB MS Life Science Guide",
+                "subtitle": "Comprehensive Review of 100 Topics",
+                "goal": "Goal: Master the vocabulary and concepts for the National Science Bowl."
+            },
+            {
+                "type": "module",
+                "title": "SECTION 1: TIER 1 - THE \"MUST KNOWS\" (Topics 1-10)",
+                "subtitle": "These topics appear in almost every round. Mastery here is mandatory."
+            },
+            {
+                "type": "content",
+                "title": "1. Plant Vascular Systems",
+                "content": [
+                    "<strong>Xylem:</strong> Transports water & dissolved minerals. Moves <strong>UP</strong> only (roots to leaves). Dead at maturity (Tracheids/Vessels).",
+                    "<strong>Phloem:</strong> Transports sugars (photosynthate). Moves <strong>Up and Down</strong> (Source to Sink). Living cells (Sieve tubes)."
+                ],
+                "image_prompt": "Cross-section of a stem showing vascular bundles (Xylem inner, Phloem outer).",
+                "image_filename": "slide_1__plant_vascular_systems.png",
+                "image": "slide_1__plant_vascular_systems.png"
+            },
+            {
+                "type": "content",
+                "title": "2. Photosynthesis",
+                "content": [
+                    "<strong>The Equation:</strong> 6CO\u2082 + 6H\u2082O + Light \u2192 C\u2086H\u2081\u2082O\u2086 + 6O\u2082.",
+                    "<strong>Light Reactions:</strong> Occur in <strong>Thylakoids</strong>. Produce ATP, NADPH, and O\u2082.",
+                    "<strong>Calvin Cycle (Dark Reactions):</strong> Occur in <strong>Stroma</strong>. Use ATP/NADPH to fix CO\u2082 into Glucose."
+                ],
+                "image_prompt": "Diagram of a Chloroplast labeling Thylakoid and Stroma.",
+                "image_filename": "slide_2__photosynthesis.png",
+                "image": "slide_2__photosynthesis.png"
+            },
+            {
+                "type": "content",
+                "title": "3. Eukaryotic Cell Organelles",
+                "content": [
+                    "<strong>Mitochondria:</strong> Powerhouse (ATP production via Krebs Cycle/ETC). Maternal inheritance.",
+                    "<strong>Ribosomes:</strong> Protein synthesis. Found in cytoplasm (free) or Rough ER (bound).",
+                    "<strong>Lysosome:</strong> Digestion/Waste removal (enzymes).",
+                    "<strong>Golgi:</strong> Packaging and shipping proteins."
+                ],
+                "image_prompt": "Animal cell diagram with lines pointing to these specific organelles.",
+                "image_filename": "slide_3__eukaryotic_cell_organelles.png",
+                "image": "slide_3__eukaryotic_cell_organelles.png"
+            },
+            {
+                "type": "content",
+                "title": "4. Mendelian Genetics",
+                "content": [
+                    "<strong>Genotype vs. Phenotype:</strong> Genetic makeup vs. Physical traits.",
+                    "<strong>Heterozygous (Bb) vs. Homozygous (BB or bb).</strong>",
+                    "<strong>Laws:</strong> Segregation (alleles separate) and Independent Assortment."
+                ],
+                "image_prompt": "A 2x2 Punnett Square crossing two Heterozygotes (3:1 phenotype ratio).",
+                "image_filename": "slide_4__mendelian_genetics.png",
+                "image": "slide_4__mendelian_genetics.png"
+            },
+            {
+                "type": "content",
+                "title": "5. Mitosis & The Cell Cycle",
+                "content": [
+                    "<strong>Goal:</strong> Growth and repair. Makes 2 identical diploid cells.",
+                    "<strong>Interphase:</strong> G1, S (DNA replication), G2.",
+                    "<strong>PMAT:</strong>",
+                    "<strong>P</strong>rophase (Chromosomes condense).",
+                    "<strong>M</strong>etaphase (Middle/Equator).",
+                    "<strong>A</strong>naphase (Apart/Sister chromatids split).",
+                    "<strong>T</strong>elophase (Two nuclei form)."
+                ],
+                "image_prompt": "The cell cycle pie chart and snapshots of the 4 mitotic phases.",
+                "image_filename": "slide_5__mitosis___the_cell_cycle.png",
+                "image": "slide_5__mitosis___the_cell_cycle.png"
+            },
+            {
+                "type": "content",
+                "title": "6. The Human Heart & Circulation",
+                "content": [
+                    "<strong>Chambers:</strong> 4 (2 Atria receive, 2 Ventricles pump).",
+                    "<strong>Flow:</strong> Right side = Deoxygenated (to lungs). Left side = Oxygenated (to body).",
+                    "<strong>Vessels:</strong> Arteries (Away/Thick walls), Veins (Visit/Valves), Capillaries (Exchange)."
+                ],
+                "image_prompt": "Heart diagram with blue/red arrows indicating flow direction.",
+                "image_filename": "slide_6__the_human_heart___circulation.png",
+                "image": "slide_6__the_human_heart___circulation.png"
+            },
+            {
+                "type": "content",
+                "title": "7. DNA & RNA Structure",
+                "content": [
+                    "<strong>DNA:</strong> Double helix, Deoxyribose, Thymine (A-T, C-G).",
+                    "<strong>RNA:</strong> Single strand, Ribose, Uracil (A-U, C-G).",
+                    "<strong>Central Dogma:</strong> DNA \u2192 (Transcription) \u2192 RNA \u2192 (Translation) \u2192 Protein."
+                ],
+                "image_prompt": "Double helix vs Single strand side-by-side.",
+                "image_filename": "slide_7__dna___rna_structure.png",
+                "image": "slide_7__dna___rna_structure.png"
+            },
+            {
+                "type": "content",
+                "title": "8. Microbiology (Bacteria)",
+                "content": [
+                    "<strong>Prokaryotic:</strong> No nucleus, no membrane-bound organelles.",
+                    "<strong>Shapes:</strong> Cocci (Sphere), Bacilli (Rod), Spirilla (Spiral).",
+                    "<strong>Cell Wall:</strong> Peptidoglycan (Gram+ = Purple/Thick; Gram- = Pink/Thin)."
+                ],
+                "image_prompt": "Microscope images of the three bacterial shapes.",
+                "image_filename": "slide_8__microbiology__bacteria_.png",
+                "image": "slide_8__microbiology__bacteria_.png"
+            },
+            {
+                "type": "content",
+                "title": "9. Nervous System",
+                "content": [
+                    "<strong>CNS:</strong> Brain + Spinal Cord.",
+                    "<strong>Brain Parts:</strong> Cerebrum (Thought), Cerebellum (Balance/Coordination), Brainstem/Medulla (Involuntary: breathing/heart).",
+                    "<strong>Neuron:</strong> Dendrite (receives) \u2192 Cell Body \u2192 Axon (sends) \u2192 Synapse."
+                ],
+                "image_prompt": "Diagram of a Neuron and a side profile of the brain.",
+                "image_filename": "slide_9__nervous_system.png",
+                "image": "slide_9__nervous_system.png"
+            },
+            {
+                "type": "module",
+                "title": "SECTION 2: TIER 2 - MODERATE YIELD (Topics 11-25)",
+                "subtitle": "These distinguish the good teams from the great teams."
+            },
+            {
+                "type": "content",
+                "title": "10. Taxonomy & Domains",
+                "content": [
+                    "<strong>3 Domains:</strong> Bacteria, Archaea (Extremophiles), Eukarya.",
+                    "<strong>Kingdoms of Eukarya:</strong> Protista, Fungi, Plantae, Animalia.",
+                    "<strong>Hierarchy:</strong> Domain, Kingdom, Phylum, Class, Order, Family, Genus, Species (D-K-P-C-O-F-G-S).",
+                    "These distinguish the good teams from the great teams.*"
+                ],
+                "image_prompt": "An inverted pyramid showing the hierarchy from Domain to Species.",
+                "image_filename": "slide_10__taxonomy___domains.png",
+                "image": "slide_10__taxonomy___domains.png"
+            },
+            {
+                "type": "content",
+                "title": "11. Enzymes",
+                "content": [
+                    "<strong>Function:</strong> Biological catalysts (lower activation energy).",
+                    "<strong>Structure:</strong> Substrate binds to Active Site (Lock & Key).",
+                    "<strong>Sensitivity:</strong> Affected by pH and Temperature (can Denature/unfold)."
+                ],
+                "image_prompt": "Graph of Reaction Rate vs. Activation Energy (with and without enzyme).",
+                "image_filename": "slide_11__enzymes.png",
+                "image": "slide_11__enzymes.png"
+            },
+            {
+                "type": "content",
+                "title": "12. Symbiosis",
+                "content": [
+                    "<strong>Mutualism (+/+):</strong> Both benefit (e.g., Nitrogen-fixing bacteria & legumes).",
+                    "<strong>Commensalism (+/0):</strong> One benefits, one unaffected (e.g., Barnacles on whales).",
+                    "<strong>Parasitism (+/-):</strong> One benefits, host harmed (e.g., Ticks, Tapeworms)."
+                ],
+                "image_prompt": "Simple icons (smiley faces) representing the interaction outcomes.",
+                "image_filename": "slide_12__symbiosis.png",
+                "image": "slide_12__symbiosis.png"
+            },
+            {
+                "type": "content",
+                "title": "13. Blood Components",
+                "content": [
+                    "<strong>Erythrocytes (RBC):</strong> Carry O\u2082 via Hemoglobin. No nucleus.",
+                    "<strong>Leukocytes (WBC):</strong> Fight infection (Immune system).",
+                    "<strong>Thrombocytes (Platelets):</strong> Clotting.",
+                    "<strong>Plasma:</strong> Fluid matrix (water, proteins, salts)."
+                ],
+                "image_prompt": "A smear slide image of blood showing the size difference between RBCs and WBCs.",
+                "image_filename": "slide_13__blood_components.png",
+                "image": "slide_13__blood_components.png"
+            },
+            {
+                "type": "content",
+                "title": "14. Plant Reproduction (Flowers)",
+                "content": [
+                    "<strong>Stamen (Male):</strong> Anther (pollen) + Filament.",
+                    "<strong>Pistil/Carpel (Female):</strong> Stigma (sticky top), Style (tube), Ovary (becomes fruit)."
+                ],
+                "image_prompt": "Detailed flower anatomy diagram.",
+                "image_filename": "slide_14__plant_reproduction__flowers_.png",
+                "image": "slide_14__plant_reproduction__flowers_.png"
+            },
+            {
+                "type": "content",
+                "title": "15. Meiosis",
+                "content": [
+                    "<strong>Purpose:</strong> Sexual reproduction (Gametes).",
+                    "<strong>Process:</strong> 2 Divisions (Meiosis I & II).",
+                    "<strong>Result:</strong> 4 Haploid cells (n).",
+                    "<strong>Variation:</strong> Crossing Over occurs in Prophase I."
+                ],
+                "image_prompt": "Diagram showing homologous pairs separating vs. sister chromatids separating.",
+                "image_filename": "slide_15__meiosis.png",
+                "image": "slide_15__meiosis.png"
+            },
+            {
+                "type": "content",
+                "title": "16. Arthropods",
+                "content": [
+                    "<strong>Characteristics:</strong> Jointed appendages, Segmented body, Chitin exoskeleton.",
+                    "<strong>Classes:</strong> Insecta (3 body parts, 6 legs), Arachnida (2 body parts, 8 legs), Crustacea (Gills, 2 pairs antennae)."
+                ],
+                "image_prompt": "Comparison photo of a Grasshopper, Spider, and Crab.",
+                "image_filename": "slide_16__arthropods.png",
+                "image": "slide_16__arthropods.png"
+            },
+            {
+                "type": "content",
+                "title": "17. Endocrine System",
+                "content": [
+                    "<strong>Pancreas:</strong> Insulin (lowers blood sugar), Glucagon (raises it).",
+                    "<strong>Adrenal:</strong> Epinephrine/Adrenaline (Stress).",
+                    "<strong>Pituitary:</strong> Master gland (Growth hormone).",
+                    "<strong>Thyroid:</strong> Metabolism (Thyroxine)."
+                ],
+                "image_prompt": "Human body outline showing gland locations.",
+                "image_filename": "slide_17__endocrine_system.png",
+                "image": "slide_17__endocrine_system.png"
+            },
+            {
+                "type": "content",
+                "title": "18. Biomes",
+                "content": [
+                    "<strong>Tundra:</strong> Permafrost, no trees.",
+                    "<strong>Taiga (Boreal):</strong> Conifers, cold winters.",
+                    "<strong>Deciduous Forest:</strong> Trees lose leaves.",
+                    "<strong>Rainforest:</strong> High biodiversity, poor soil."
+                ],
+                "image_prompt": "World map color-coded by biome.",
+                "image_filename": "slide_18__biomes.png",
+                "image": "slide_18__biomes.png"
+            },
+            {
+                "type": "content",
+                "title": "19. Cellular Respiration",
+                "content": [
+                    "<strong>Glycolysis:</strong> Cytoplasm. Glucose \u2192 Pyruvate (2 ATP).",
+                    "<strong>Krebs Cycle:</strong> Matrix. Makes NADH/FADH\u2082.",
+                    "<strong>ETC:</strong> Inner Membrane. Makes ~32-34 ATP. Requires Oxygen."
+                ],
+                "image_prompt": "Flowchart of the three stages and ATP yield.",
+                "image_filename": "slide_19__cellular_respiration.png",
+                "image": "slide_19__cellular_respiration.png"
+            },
+            {
+                "type": "content",
+                "title": "20. Biochemistry (Macromolecules)",
+                "content": [
+                    "<strong>Carbohydrates:</strong> Monosaccharides (Glucose). Energy.",
+                    "<strong>Lipids:</strong> Fatty acids. Membranes/Storage.",
+                    "<strong>Proteins:</strong> Amino Acids (Peptide bonds). Enzymes/Structure.",
+                    "<strong>Nucleic Acids:</strong> Nucleotides. Heredity."
+                ],
+                "image_prompt": "Chemical structure skeletons of a sugar, lipid, and amino acid.",
+                "image_filename": "slide_20__biochemistry__macromolecules_.png",
+                "image": "slide_20__biochemistry__macromolecules_.png"
+            },
+            {
+                "type": "content",
+                "title": "21. Plant Groups",
+                "content": [
+                    "<strong>Bryophytes:</strong> Mosses (Non-vascular).",
+                    "<strong>Pteridophytes:</strong> Ferns (Vascular, spores).",
+                    "<strong>Gymnosperms:</strong> \"Naked seed\" (Conifers).",
+                    "<strong>Angiosperms:</strong> Flowering plants (Fruits)."
+                ],
+                "image_prompt": "Evolutionary tree of plants (Cladogram).",
+                "image_filename": "slide_21__plant_groups.png",
+                "image": "slide_21__plant_groups.png"
+            },
+            {
+                "type": "content",
+                "title": "22. Viruses",
+                "content": [
+                    "<strong>Structure:</strong> Capsid (protein) + DNA or RNA. Non-living.",
+                    "<strong>Bacteriophage:</strong> Virus that infects bacteria.",
+                    "<strong>Retrovirus:</strong> Uses Reverse Transcriptase (RNA \u2192 DNA). Example: HIV."
+                ],
+                "image_prompt": "Diagram of a Bacteriophage (Alien lander shape).",
+                "image_filename": "slide_22__viruses.png",
+                "image": "slide_22__viruses.png"
+            },
+            {
+                "type": "content",
+                "title": "23. Evolution Concepts",
+                "content": [
+                    "<strong>Natural Selection:</strong> \"Survival of the fittest.\"",
+                    "<strong>Homologous Structures:</strong> Same structure, different function (Bat wing/Human arm) = Common Ancestor.",
+                    "<strong>Analogous Structures:</strong> Different structure, same function (Bird wing/Butterfly wing) = Convergent Evolution."
+                ],
+                "image_prompt": "Comparison of forelimbs (human, cat, whale, bat).",
+                "image_filename": "slide_23__evolution_concepts.png",
+                "image": "slide_23__evolution_concepts.png"
+            },
+            {
+                "type": "content",
+                "title": "24. Digestive System",
+                "content": [
+                    "<strong>Sequence:</strong> Mouth (Amylase) \u2192 Esophagus (Peristalsis) \u2192 Stomach (Pepsin/Acid) \u2192 Small Intestine (Absorption) \u2192 Large Intestine (Water).",
+                    "<strong>Small Intestine:</strong> Duodenum (Digestion), Jejunum/Ileum (Absorption)."
+                ],
+                "image_prompt": "Diagram of the digestive tract.",
+                "image_filename": "slide_24__digestive_system.png",
+                "image": "slide_24__digestive_system.png"
+            },
+            {
+                "type": "module",
+                "title": "SECTION 3: TIER 3 - SPECIFIC TOPICS (Topics 26-50)",
+                "subtitle": "These questions often determine the winner of a close match."
+            },
+            {
+                "type": "content",
+                "title": "25. Kingdom Fungi",
+                "content": [
+                    "<strong>Cell Wall:</strong> Chitin.",
+                    "<strong>Structure:</strong> Hyphae (filaments) form Mycelium.",
+                    "<strong>Nutrition:</strong> Heterotrophs (Saprotrophs/Decomposers) - absorptive nutrition.",
+                    "<strong>Lichens:</strong> Symbiosis between Fungus + Algae/Cyanobacteria.",
+                    "These questions often determine the winner of a close match.*"
+                ],
+                "image_prompt": "Photo of mushroom anatomy and a microscopic view of hyphae.",
+                "image_filename": "slide_25__kingdom_fungi.png",
+                "image": "slide_25__kingdom_fungi.png"
+            },
+            {
+                "type": "content",
+                "title": "26. Human Senses",
+                "content": [
+                    "<strong>Eye:</strong> Retina (screen), Rods (B&W/Night), Cones (Color).",
+                    "<strong>Ear:</strong> Tympanic Membrane (Eardrum), Cochlea (Hearing), Semicircular Canals (Balance)."
+                ],
+                "image_prompt": "Cross-section of the Eye and Ear.",
+                "image_filename": "slide_26__human_senses.png",
+                "image": "slide_26__human_senses.png"
+            },
+            {
+                "type": "content",
+                "title": "27. Muscular System",
+                "content": [
+                    "<strong>Skeletal:</strong> Striated, Voluntary, Multinucleated.",
+                    "<strong>Smooth:</strong> Non-striated, Involuntary (Organs).",
+                    "<strong>Cardiac:</strong> Striated, Involuntary, Intercalated discs.",
+                    "<strong>Contraction:</strong> Actin & Myosin (Sliding Filament Theory)."
+                ],
+                "image_prompt": "Microscopic views of the three muscle types.",
+                "image_filename": "slide_27__muscular_system.png",
+                "image": "slide_27__muscular_system.png"
+            },
+            {
+                "type": "content",
+                "title": "28. Excretory System",
+                "content": [
+                    "<strong>Kidney:</strong> Filters blood.",
+                    "<strong>Nephron:</strong> Functional unit.",
+                    "<strong>Glomerulus:</strong> Filtration site.",
+                    "<strong>Loop of Henle:</strong> Water reabsorption."
+                ],
+                "image_prompt": "Diagram of a Nephron.",
+                "image_filename": "slide_28__excretory_system.png",
+                "image": "slide_28__excretory_system.png"
+            },
+            {
+                "type": "content",
+                "title": "29. Protists",
+                "content": [
+                    "<strong>Animal-like (Protozoa):</strong> Amoeba (pseudopods), Paramecium (cilia).",
+                    "<strong>Plant-like (Algae):</strong> Diatoms (silica shells), Euglena (eye spot)."
+                ],
+                "image_prompt": "Photos of Amoeba, Paramecium, and Euglena.",
+                "image_filename": "slide_29__protists.png",
+                "image": "slide_29__protists.png"
+            },
+            {
+                "type": "content",
+                "title": "30. Human Bones",
+                "content": [
+                    "<strong>Arm:</strong> Humerus, Radius, Ulna.",
+                    "<strong>Leg:</strong> Femur (largest), Tibia, Fibula.",
+                    "<strong>Torso:</strong> Clavicle (collarbone), Sternum, Scapula."
+                ],
+                "image_prompt": "Skeleton diagram with major bones labeled.",
+                "image_filename": "slide_30__human_bones.png",
+                "image": "slide_30__human_bones.png"
+            },
+            {
+                "type": "content",
+                "title": "31. Invertebrate Phyla",
+                "content": [
+                    "<strong>Porifera:</strong> Sponges (No tissues).",
+                    "<strong>Cnidaria:</strong> Jellyfish/Coral (Stinging cells/Nematocysts).",
+                    "<strong>Mollusca:</strong> Soft body, Mantle, Foot (Snails, Clams, Squid).",
+                    "<strong>Echinodermata:</strong> Spiny skin, Water vascular system (Starfish)."
+                ],
+                "image_prompt": "Photo collage of one animal from each phylum.",
+                "image_filename": "slide_31__invertebrate_phyla.png",
+                "image": "slide_31__invertebrate_phyla.png"
+            },
+            {
+                "type": "content",
+                "title": "32. Plant Growth",
+                "content": [
+                    "<strong>Meristem:</strong> Region of cell division (Tip of root/shoot).",
+                    "<strong>Primary Growth:</strong> Length (Apical meristem).",
+                    "<strong>Secondary Growth:</strong> Girth/Width (Cambium).",
+                    "<strong>Tropisms:</strong> Phototropism (Light), Gravitropism (Gravity), Thigmotropism (Touch)."
+                ],
+                "image_prompt": "Diagram of a root tip showing the meristem.",
+                "image_filename": "slide_32__plant_growth.png",
+                "image": "slide_32__plant_growth.png"
+            },
+            {
+                "type": "content",
+                "title": "33. Cellular Transport",
+                "content": [
+                    "<strong>Passive:</strong> High to Low concentration. No Energy. (Diffusion, Osmosis).",
+                    "<strong>Active:</strong> Low to High. Requires ATP. (Sodium-Potassium Pump).",
+                    "<strong>Hypertonic:</strong> Water leaves cell (shrivels).",
+                    "<strong>Hypotonic:</strong> Water enters cell (swells/bursts)."
+                ],
+                "image_prompt": "Beakers showing cells in Hyper/Hypo/Isotonic solutions.",
+                "image_filename": "slide_33__cellular_transport.png",
+                "image": "slide_33__cellular_transport.png"
+            },
+            {
+                "type": "content",
+                "title": "34. Vertebrate Classes",
+                "content": [
+                    "<strong>Agnatha:</strong> Jawless fish (Lamprey).",
+                    "<strong>Chondrichthyes:</strong> Cartilage fish (Sharks).",
+                    "<strong>Osteichthyes:</strong> Bony fish.",
+                    "<strong>Amphibia:</strong> Double life (Water/Land), moist skin.",
+                    "<strong>Reptilia:</strong> Scaly skin, Amniotic egg.",
+                    "<strong>Aves:</strong> Birds, endothermic.",
+                    "<strong>Mammalia:</strong> Hair, mammary glands."
+                ],
+                "image_prompt": "Evolutionary tree of vertebrates.",
+                "image_filename": "slide_34__vertebrate_classes.png",
+                "image": "slide_34__vertebrate_classes.png"
+            },
+            {
+                "type": "content",
+                "title": "35. Parasitology",
+                "content": [
+                    "<strong>Vector:</strong> Organism that transmits disease (Mosquito = Malaria).",
+                    "<strong>Host:</strong> Organism the parasite lives on.",
+                    "<strong>Platyhelminthes:</strong> Tapeworms, Flukes.",
+                    "<strong>Nematodes:</strong> Roundworms (Hookworm)."
+                ],
+                "image_prompt": "Diagram of the Malaria life cycle.",
+                "image_filename": "slide_35__parasitology.png",
+                "image": "slide_35__parasitology.png"
+            },
+            {
+                "type": "content",
+                "title": "36. Cell Membrane Structure",
+                "content": [
+                    "<strong>Phospholipid Bilayer:</strong> Hydrophilic heads (out), Hydrophobic tails (in).",
+                    "<strong>Fluid Mosaic Model:</strong> Proteins float in the lipid sea.",
+                    "<strong>Semi-permeable:</strong> Controls what enters/exits."
+                ],
+                "image_prompt": "3D rendering of the cell membrane.",
+                "image_filename": "slide_36__cell_membrane_structure.png",
+                "image": "slide_36__cell_membrane_structure.png"
+            },
+            {
+                "type": "content",
+                "title": "37. History of Biology",
+                "content": [
+                    "<strong>Hooke:</strong> Named \"Cells\" (cork).",
+                    "<strong>Leeuwenhoek:</strong> First to see living cells (microscope).",
+                    "<strong>Pasteur:</strong> Disproved spontaneous generation (germ theory).",
+                    "<strong>Watson, Crick, Franklin:</strong> DNA Structure."
+                ],
+                "image_prompt": "Photos of these scientists.",
+                "image_filename": "slide_37__history_of_biology.png",
+                "image": "slide_37__history_of_biology.png"
+            },
+            {
+                "type": "content",
+                "title": "38. Genetic Mutations",
+                "content": [
+                    "<strong>Point Mutation:</strong> One base change (Substitution).",
+                    "<strong>Frameshift:</strong> Insertion or Deletion (changes everything after).",
+                    "<strong>Chromosomal:</strong>",
+                    "<strong>Nondisjunction:</strong> Failure to separate (Down Syndrome/Trisomy 21)."
+                ],
+                "image_prompt": "Diagram comparing Point vs. Frameshift mutation effects.",
+                "image_filename": "slide_38__genetic_mutations.png",
+                "image": "slide_38__genetic_mutations.png"
+            },
+            {
+                "type": "content",
+                "title": "39. Biogeochemical Cycles",
+                "content": [
+                    "<strong>Carbon:</strong> Photosynthesis vs. Respiration vs. Combustion.",
+                    "<strong>Nitrogen:</strong> Fixation (Bacteria convert N\u2082 gas to Ammonia/Nitrate for plants).",
+                    "<strong>Water:</strong> Evaporation, Transpiration, Precipitation."
+                ],
+                "image_prompt": "Diagram of the Nitrogen Cycle (focus on bacteria's role).",
+                "image_filename": "slide_39__biogeochemical_cycles.png",
+                "image": "slide_39__biogeochemical_cycles.png"
+            },
+            {
+                "type": "content",
+                "title": "40. Immune System",
+                "content": [
+                    "<strong>Antigen:</strong> Foreign marker (Identifier).",
+                    "<strong>Antibody:</strong> Protein made by B-Cells to tag antigens (Y-shaped).",
+                    "<strong>T-Cells:</strong> Helper (signals), Cytotoxic (kills).",
+                    "<strong>Vaccine:</strong> Introduces antigen to build memory."
+                ],
+                "image_prompt": "Diagram of an Antibody binding to an Antigen.",
+                "image_filename": "slide_40__immune_system.png",
+                "image": "slide_40__immune_system.png"
+            },
+            {
+                "type": "content",
+                "title": "41. Plant Hormones",
+                "content": [
+                    "<strong>Auxin:</strong> Growth, phototropism.",
+                    "<strong>Ethylene:</strong> Fruit ripening (gas).",
+                    "<strong>Gibberellins:</strong> Stem elongation, germination.",
+                    "<strong>Abscisic Acid:</strong> Stress response, closes stomata."
+                ],
+                "image_prompt": "Photo of a plant bending toward light (Auxin effect).",
+                "image_filename": "slide_41__plant_hormones.png",
+                "image": "slide_41__plant_hormones.png"
+            },
+            {
+                "type": "content",
+                "title": "42. Protein Synthesis (The Details)",
+                "content": [
+                    "<strong>Transcription:</strong> DNA \u2192 mRNA (in Nucleus).",
+                    "<strong>Translation:</strong> mRNA \u2192 Protein (at Ribosome).",
+                    "<strong>Codon:</strong> 3 bases on mRNA.",
+                    "<strong>Anticodon:</strong> 3 bases on tRNA (carries Amino Acid)."
+                ],
+                "image_prompt": "Diagram of the Translation process at the ribosome.",
+                "image_filename": "slide_42__protein_synthesis__the_details_.png",
+                "image": "slide_42__protein_synthesis__the_details_.png"
+            },
+            {
+                "type": "content",
+                "title": "43. Ecological Interactions",
+                "content": [
+                    "<strong>Food Chain:</strong> Producer \u2192 Primary Consumer \u2192 Secondary Consumer.",
+                    "<strong>10% Rule:</strong> Only 10% of energy moves up to the next level.",
+                    "<strong>Food Web:</strong> Interconnected chains."
+                ],
+                "image_prompt": "An energy pyramid showing the 10% rule.",
+                "image_filename": "slide_43__ecological_interactions.png",
+                "image": "slide_43__ecological_interactions.png"
+            },
+            {
+                "type": "content",
+                "title": "44. Human Teeth",
+                "content": [
+                    "<strong>Incisors:</strong> Cutting (Front).",
+                    "<strong>Canines:</strong> Tearing (Pointy).",
+                    "<strong>Premolars/Molars:</strong> Grinding (Back).",
+                    "<strong>Formula:</strong> 2-1-2-3 (Adults)."
+                ],
+                "image_prompt": "Diagram of the jaw labeling tooth types.",
+                "image_filename": "slide_44__human_teeth.png",
+                "image": "slide_44__human_teeth.png"
+            },
+            {
+                "type": "content",
+                "title": "45. Fish Anatomy",
+                "content": [
+                    "<strong>Operculum:</strong> Cover for gills.",
+                    "<strong>Swim Bladder:</strong> Buoyancy control.",
+                    "<strong>Lateral Line:</strong> Detects vibration/pressure."
+                ],
+                "image_prompt": "Internal anatomy diagram of a bony fish.",
+                "image_filename": "slide_45__fish_anatomy.png",
+                "image": "slide_45__fish_anatomy.png"
+            },
+            {
+                "type": "content",
+                "title": "46. Population Ecology",
+                "content": [
+                    "<strong>Carrying Capacity (K):</strong> Max population an environment can support.",
+                    "<strong>Exponential Growth:</strong> J-curve.",
+                    "<strong>Logistic Growth:</strong> S-curve (levels off at K)."
+                ],
+                "image_prompt": "Graph comparing J-curve and S-curve.",
+                "image_filename": "slide_46__population_ecology.png",
+                "image": "slide_46__population_ecology.png"
+            },
+            {
+                "type": "content",
+                "title": "47. Respiratory System",
+                "content": [
+                    "<strong>Alveoli:</strong> Air sacs, site of gas exchange.",
+                    "<strong>Diaphragm:</strong> Muscle that controls breathing.",
+                    "<strong>Trachea:</strong> Windpipe (cartilage rings)."
+                ],
+                "image_prompt": "Diagram of the lungs zooming in on Alveoli.",
+                "image_filename": "slide_47__respiratory_system.png",
+                "image": "slide_47__respiratory_system.png"
+            },
+            {
+                "type": "content",
+                "title": "48. Animal Behavior",
+                "content": [
+                    "<strong>Innate:</strong> Instinct/Born with it.",
+                    "<strong>Imprinting:</strong> Learning at a critical period (Geese following mom).",
+                    "<strong>Habituation:</strong> Ignoring a repeated stimulus."
+                ],
+                "image_prompt": "Photo of Konrad Lorenz with his geese (Imprinting).",
+                "image_filename": "slide_48__animal_behavior.png",
+                "image": "slide_48__animal_behavior.png"
+            },
+            {
+                "type": "content",
+                "title": "49. Biotechnology",
+                "content": [
+                    "<strong>PCR:</strong> Polymerase Chain Reaction (copies DNA fast).",
+                    "<strong>Gel Electrophoresis:</strong> Separates DNA by size (DNA is negative, moves to positive).",
+                    "<strong>Restriction Enzymes:</strong> Cut DNA at specific sequences."
+                ],
+                "image_prompt": "Image of a Gel Electrophoresis result.",
+                "image_filename": "slide_49__biotechnology.png",
+                "image": "slide_49__biotechnology.png"
+            },
+            {
+                "type": "module",
+                "title": "SECTION 4: TIER 4 - RAPID FIRE (Topics 51-100)",
+                "subtitle": "These slides cover brief facts. Good for \"Speed Rounds.\""
+            },
+            {
+                "type": "content",
+                "title": "50. Cell Junctions",
+                "content": [
+                    "<strong>Gap Junctions:</strong> Channels between animal cells (communication).",
+                    "<strong>Tight Junctions:</strong> Watertight seal (animal cells).",
+                    "<strong>Plasmodesmata:</strong> Channels between plant cells (through cell walls).",
+                    "These slides cover brief facts. Good for \"Speed Rounds.\"*"
+                ],
+                "image_prompt": "Diagram comparing Gap junctions and Plasmodesmata.",
+                "image_filename": "slide_50__cell_junctions.png",
+                "image": "slide_50__cell_junctions.png"
+            },
+            {
+                "type": "content",
+                "title": "51. Liver",
+                "content": [
+                    "Produces <strong>Bile</strong> (emulsifies fat).",
+                    "Detoxifies blood.",
+                    "Stores Glycogen."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "52. Pancreas",
+                "content": [
+                    "Digestive: Secretes enzymes into small intestine.",
+                    "Endocrine: Islets of Langerhans make Insulin/Glucagon."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "53. Leaf Anatomy",
+                "content": [
+                    "<strong>Stomata:</strong> Pores for gas exchange.",
+                    "<strong>Guard Cells:</strong> Open/close stomata.",
+                    "<strong>Mesophyll:</strong> Photosynthetic tissue."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "54. Reproductive System",
+                "content": [
+                    "<strong>Gametes:</strong> Sperm and Egg (Haploid).",
+                    "<strong>Zygote:</strong> Fertilized egg (Diploid).",
+                    "<strong>Gonads:</strong> Testes and Ovaries."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "55. Integumentary System (Skin)",
+                "content": [
+                    "<strong>Epidermis:</strong> Outer layer.",
+                    "<strong>Keratin:</strong> Waterproofing protein.",
+                    "<strong>Melanin:</strong> Pigment (UV protection)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "56. Connective Tissue",
+                "content": [
+                    "<strong>Ligament:</strong> Bone to Bone.",
+                    "<strong>Tendon:</strong> Muscle to Bone.",
+                    "<strong>Cartilage:</strong> Cushioning (no blood supply)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "57. Birds (Aves)",
+                "content": [
+                    "<strong>Adaptations for Flight:</strong> Hollow bones, no teeth, air sacs.",
+                    "<strong>Crop:</strong> Stores food.",
+                    "<strong>Gizzard:</strong> Grinds food."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "58. Insect Metamorphosis",
+                "content": [
+                    "<strong>Complete:</strong> Egg \u2192 Larva \u2192 Pupa \u2192 Adult (Butterfly).",
+                    "<strong>Incomplete:</strong> Egg \u2192 Nymph \u2192 Adult (Grasshopper)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "59. Marine Biology",
+                "content": [
+                    "<strong>Phytoplankton:</strong> Plant-like (producers).",
+                    "<strong>Zooplankton:</strong> Animal-like (consumers).",
+                    "<strong>Benthic:</strong> Bottom dwellers."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "60. Prions",
+                "content": [
+                    "Infectious <strong>Proteins</strong> (no DNA/RNA).",
+                    "Causes Mad Cow Disease."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "61. Vitamins",
+                "content": [
+                    "<strong>Fat Soluble:</strong> A, D, E, K.",
+                    "<strong>Water Soluble:</strong> B, C.",
+                    "<strong>Scurvy:</strong> Lack of Vitamin C."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "62. Fermentation",
+                "content": [
+                    "Anaerobic (No Oxygen).",
+                    "<strong>Lactic Acid:</strong> Muscle cells, yogurt.",
+                    "<strong>Alcoholic:</strong> Yeast (Ethanol + CO\u2082)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "63. Glycolysis",
+                "content": [
+                    "Occurs in Cytoplasm.",
+                    "Anaerobic.",
+                    "Net Gain: <strong>2 ATP</strong>."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "64. Cytoskeleton",
+                "content": [
+                    "<strong>Microtubules:</strong> Tubulin (Spindle fibers, flagella).",
+                    "<strong>Microfilaments:</strong> Actin (Movement, shape)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "65. Antibiotics",
+                "content": [
+                    "Kill Bacteria (NOT viruses).",
+                    "Target cell walls or ribosomes.",
+                    "<strong>Penicillin:</strong> First antibiotic (Fleming)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "66. Mimicry",
+                "content": [
+                    "<strong>Batesian:</strong> Harmless mimics Harmful (Fly looks like Wasp).",
+                    "<strong>Mullerian:</strong> Two harmful species look alike (Bee and Wasp)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "67. Seed Germination",
+                "content": [
+                    "Needs: Water, Oxygen, Warmth (Usually NO light needed).",
+                    "<strong>Radicle:</strong> First root to emerge."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "68. Soil Science",
+                "content": [
+                    "<strong>Humus:</strong> Decaying organic matter.",
+                    "<strong>Loam:</strong> Best for plants (Sand/Silt/Clay mix)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "69. Classification",
+                "content": [
+                    "<strong>Binomial Nomenclature:</strong> *Genus species*.",
+                    "Developed by Carolus Linnaeus."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "70. Endosymbiotic Theory",
+                "content": [
+                    "Mitochondria/Chloroplasts were once free-living bacteria.",
+                    "Evidence: They have their own circular DNA and ribosomes."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "71. Feedback Loops",
+                "content": [
+                    "<strong>Negative:</strong> Maintains homeostasis (Body temp, Blood sugar).",
+                    "<strong>Positive:</strong> Amplifies change (Childbirth contractions, Blood clotting)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "72. Blood Pressure",
+                "content": [
+                    "<strong>Systolic:</strong> Heart contracts (Top number).",
+                    "<strong>Diastolic:</strong> Heart relaxes (Bottom number)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "73. Invasive Species",
+                "content": [
+                    "Non-native.",
+                    "No natural predators.",
+                    "Examples: Kudzu, Zebra Mussel."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "74. Speciation",
+                "content": [
+                    "<strong>Allopatric:</strong> Geographic separation.",
+                    "<strong>Sympatric:</strong> Same area (often polyploidy in plants)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "75. Chemical Bonds",
+                "content": [
+                    "<strong>Peptide:</strong> Holds Amino Acids together.",
+                    "<strong>Hydrogen:</strong> Holds DNA bases together."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "76. Genetic Disorders",
+                "content": [
+                    "<strong>Hemophilia/Color Blindness:</strong> Sex-linked (X).",
+                    "<strong>Cystic Fibrosis:</strong> Autosomal Recessive.",
+                    "<strong>Huntington's:</strong> Autosomal Dominant."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "77. Action Potential",
+                "content": [
+                    "<strong>Sodium (Na+):</strong> Rushes IN (Depolarization).",
+                    "<strong>Potassium (K+):</strong> Rushes OUT (Repolarization)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "78. Staining",
+                "content": [
+                    "<strong>Gram Positive:</strong> Purple (Thick wall).",
+                    "<strong>Gram Negative:</strong> Pink (Thin wall)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "79. Microscopy",
+                "content": [
+                    "<strong>SEM:</strong> Scanning Electron (Surface/3D).",
+                    "<strong>TEM:</strong> Transmission Electron (Inside/2D)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "80. Body Symmetry",
+                "content": [
+                    "<strong>Radial:</strong> Wheel-like (Jellyfish, Starfish).",
+                    "<strong>Bilateral:</strong> Left/Right sides (Humans, Insects)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "81. Plant Pigments",
+                "content": [
+                    "<strong>Chlorophyll:</strong> Green.",
+                    "<strong>Carotenoids:</strong> Orange/Yellow.",
+                    "<strong>Anthocyanins:</strong> Red/Purple."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "82. Fruits vs. Vegetables",
+                "content": [
+                    "<strong>Botanical Fruit:</strong> Ripened ovary, contains seeds (Tomato, Cucumber).",
+                    "<strong>Vegetable:</strong> Vegetative part (Root, Stem, Leaf)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "83. Gene Expression",
+                "content": [
+                    "<strong>Operon:</strong> Gene cluster in bacteria (Lac Operon).",
+                    "<strong>Introns:</strong> \"Junk\" RNA (removed).",
+                    "<strong>Exons:</strong> Expressed RNA (kept)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "84. Nitrogenous Waste",
+                "content": [
+                    "<strong>Ammonia:</strong> Fish (Toxic).",
+                    "<strong>Urea:</strong> Mammals (Medium).",
+                    "<strong>Uric Acid:</strong> Birds/Reptiles (Solid, low water loss)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "85. Thermoregulation",
+                "content": [
+                    "<strong>Ectotherm:</strong> \"Cold blooded\" (Reptiles, Fish).",
+                    "<strong>Endotherm:</strong> \"Warm blooded\" (Mammals, Birds)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "86. Apoptosis",
+                "content": [
+                    "Programmed Cell Death.",
+                    "Examples: Tadpole tail removal, separating fingers in embryo."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "87. Root Types",
+                "content": [
+                    "<strong>Taproot:</strong> One main root (Dicots/Carrot).",
+                    "<strong>Fibrous:</strong> Many small roots (Monocots/Grass)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "88. Modified Stems",
+                "content": [
+                    "<strong>Tuber:</strong> Potato.",
+                    "<strong>Rhizome:</strong> Horizontal underground stem (Ginger).",
+                    "<strong>Bulb:</strong> Onion."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "89. Brain Lobes",
+                "content": [
+                    "<strong>Frontal:</strong> Reasoning.",
+                    "<strong>Occipital:</strong> Vision.",
+                    "<strong>Temporal:</strong> Hearing.",
+                    "<strong>Parietal:</strong> Touch/Sensory."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "90. Hearing Mechanism",
+                "content": [
+                    "<strong>Cochlea:</strong> Snail-shaped, fluid-filled.",
+                    "<strong>Organ of Corti:</strong> Hair cells (receptors)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "91. Taste & Smell",
+                "content": [
+                    "<strong>Olfactory:</strong> Smell.",
+                    "<strong>Gustatory:</strong> Taste.",
+                    "Both are Chemoreceptors."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "92. Antibody Types",
+                "content": [
+                    "<strong>IgG:</strong> Most common.",
+                    "<strong>IgA:</strong> Secretions (tears/saliva).",
+                    "<strong>IgE:</strong> Allergies."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "93. Stem Cells",
+                "content": [
+                    "<strong>Totipotent:</strong> Can be anything (Zygote).",
+                    "<strong>Pluripotent:</strong> Can be almost anything (Embryonic).",
+                    "<strong>Multipotent:</strong> Limited (Adult bone marrow)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "94. Extremophiles",
+                "content": [
+                    "<strong>Thermophile:</strong> Heat lover.",
+                    "<strong>Halophile:</strong> Salt lover.",
+                    "<strong>Acidophile:</strong> Acid lover."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "95. Circadian Rhythms",
+                "content": [
+                    "24-hour cycle.",
+                    "Controlled by Pineal Gland (Melatonin)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "96. Pheromones",
+                "content": [
+                    "Chemical signals used for communication *outside* the body (Ant trails)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "97. Keystone Species",
+                "content": [
+                    "Species with disproportionately large effect on environment (e.g., Sea Otter, Beaver)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "98. Tropisms (Movement)",
+                "content": [
+                    "<strong>Thigmotropism:</strong> Response to Touch (Vines).",
+                    "<strong>Gravitropism:</strong> Response to Gravity (Roots go down)."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "99. Fossils",
+                "content": [
+                    "<strong>Index Fossil:</strong> Widespread, short lived (used for dating layers).",
+                    "Example: Trilobite."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "content",
+                "title": "100. Scientific Method",
+                "content": [
+                    "<strong>Independent Variable:</strong> What you change (X-axis).",
+                    "<strong>Dependent Variable:</strong> What you measure (Y-axis).",
+                    "<strong>Control:</strong> Baseline for comparison."
+                ],
+                "image_prompt": null,
+                "image_filename": null
+            },
+            {
+                "type": "title",
+                "title": "Final Review",
+                "subtitle": "Good Luck!",
+                "goal": "Keep practicing these topics!"
+            }
+        ];
 
         let currentSlideIndex = 0;
-        const container = document.getElementById('slide-container');
+        const slideContainer = document.getElementById('slide-container');
         const progressBar = document.getElementById('progress-bar');
-        const slideNumber = document.getElementById('slide-number');
-
-        function createSlideElement(slideData, index) {
-            const slide = document.createElement('div');
-            slide.className = 'slide';
-            if (index === 0) slide.classList.add('active');
-
-            if (slideData.type === 'title') {
-                slide.classList.add('title-slide');
-                slide.innerHTML = `
-                    <h1>${slideData.title}</h1>
-                    <h2>${slideData.subtitle}</h2>
-                    <div class="goal">${slideData.goal}</div>
-                `;
-            } else if (slideData.type === 'module') {
-                slide.classList.add('module-header');
-                slide.innerHTML = `
-                    <h1>${slideData.title}</h1>
-                    <p>${slideData.subtitle}</p>
-                `;
-            } else {
-                let contentHtml = slideData.content.map(item => `<li>${item}</li>`).join('');
-                let imageHtml = slideData.image ? `<div class="visual-cue"><img src="${slideData.image}" alt="Diagram"></div>` : '';
-                
-                slide.innerHTML = `
-                    <h2>${slideData.title}</h2>
-                    <ul>${contentHtml}</ul>
-                    ${imageHtml}
-                `;
-            }
-            return slide;
-        }
+        const slideNumberDisplay = document.getElementById('slide-number');
+        const slideSelect = document.getElementById('slide-select');
 
         function initSlides() {
-            slidesData.forEach((data, index) => {
-                const slideEl = createSlideElement(data, index);
-                container.appendChild(slideEl);
+            slidesData.forEach((slide, index) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'slide';
+                if (index === 0) slideDiv.classList.add('active');
+
+                // Populate Dropdown
+                const option = document.createElement('option');
+                option.value = index;
+                let optionText = `${index + 1}. `;
+                if (slide.type === 'title') optionText += "Title";
+                else if (slide.type === 'module') optionText += slide.title;
+                else optionText += slide.title;
+
+                // Truncate long titles
+                if (optionText.length > 40) optionText = optionText.substring(0, 37) + "...";
+
+                option.innerText = optionText;
+                slideSelect.appendChild(option);
+
+                if (slide.type === 'title') {
+                    slideDiv.classList.add('title-slide');
+                    slideDiv.innerHTML = `
+                        <h1>${slide.title}</h1>
+                        <h2>${slide.subtitle}</h2>
+                        <div class="goal">${slide.goal}</div>
+                    `;
+                } else if (slide.type === 'module') {
+                    slideDiv.classList.add('module-header');
+                    slideDiv.innerHTML = `
+                        <h1>${slide.title}</h1>
+                        <p>${slide.subtitle}</p>
+                    `;
+                } else {
+                    let contentHtml = '<ul>';
+                    slide.content.forEach(item => {
+                        contentHtml += `<li>${item}</li>`;
+                    });
+                    contentHtml += '</ul>';
+
+                    let imageHtml = '';
+                    if (slide.image) {
+                        imageHtml = `
+                            <div class="visual-cue">
+                                <img src="${slide.image}" alt="${slide.image_prompt}" onerror="this.style.display='none'">
+                            </div>
+                        `;
+                    }
+
+                    slideDiv.innerHTML = `
+                        <h2>${slide.title}</h2>
+                        ${contentHtml}
+                        ${imageHtml}
+                    `;
+                }
+
+                slideContainer.appendChild(slideDiv);
             });
             updateProgress();
         }
 
         function showSlide(index) {
             const slides = document.querySelectorAll('.slide');
-            if (index >= 0 && index < slides.length) {
-                slides[currentSlideIndex].classList.remove('active');
-                currentSlideIndex = index;
-                slides[currentSlideIndex].classList.add('active');
-                updateProgress();
-            }
+            slides[currentSlideIndex].classList.remove('active');
+            currentSlideIndex = index;
+            if (currentSlideIndex < 0) currentSlideIndex = 0;
+            if (currentSlideIndex >= slides.length) currentSlideIndex = slides.length - 1;
+            slides[currentSlideIndex].classList.add('active');
+            updateProgress();
+            slideSelect.value = currentSlideIndex; // Sync dropdown
         }
 
         function nextSlide() {
-            showSlide(currentSlideIndex + 1);
+            if (currentSlideIndex < slidesData.length - 1) {
+                showSlide(currentSlideIndex + 1);
+            }
         }
 
         function prevSlide() {
-            showSlide(currentSlideIndex - 1);
+            if (currentSlideIndex > 0) {
+                showSlide(currentSlideIndex - 1);
+            }
+        }
+
+        function jumpToSlide(index) {
+            showSlide(parseInt(index));
         }
 
         function updateProgress() {
             const progress = ((currentSlideIndex + 1) / slidesData.length) * 100;
             progressBar.style.width = `${progress}%`;
-            slideNumber.textContent = `Slide ${currentSlideIndex + 1} / ${slidesData.length}`;
+            slideNumberDisplay.innerText = `${currentSlideIndex + 1} / ${slidesData.length}`;
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === 'Space') {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
                 nextSlide();
             } else if (e.key === 'ArrowLeft') {
                 prevSlide();
@@ -1462,4 +1524,5 @@
         initSlides();
     </script>
 </body>
+
 </html>
