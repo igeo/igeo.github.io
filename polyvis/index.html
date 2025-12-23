@@ -94,7 +94,9 @@
         <div id="polytope-name">Tesseract (4-Cube)</div>
         <div style="font-size: 0.8rem; color: #aaa; margin-top: 10px;">
             Drag to rotate view.<br>
-            Object auto-rotates in 4D.
+            Object auto-rotates in 4D.<br>
+            Reference: <a href="https://observablehq.com/@pamacha/interactive-polychora" target="_blank"
+                style="color: #4db8ff;">Interactive Polychora</a>
         </div>
     </div>
 
@@ -217,7 +219,9 @@
                     { val: 'simplex', txt: '5-Cell (Simplex)' },
                     { val: 'cube', txt: 'Tesseract (Hypercube)' },
                     { val: 'cross', txt: '16-Cell (Cross)' },
-                    { val: '24cell', txt: '24-Cell' }
+                    { val: '24cell', txt: '24-Cell' },
+                    { val: '120cell', txt: '120-Cell' },
+                    { val: '600cell', txt: '600-Cell' }
                 ];
                 opts.forEach(o => {
                     const opt = document.createElement('option');
@@ -482,6 +486,159 @@
             return { verts, lines };
         }
 
+        function generate600Cell() {
+            // 120 Vertices.
+            const phi = (1 + Math.sqrt(5)) / 2;
+            let verts = [];
+
+            // 1. 16 vertices: (±0.5, ±0.5, ±0.5, ±0.5)
+            for (let a of [-0.5, 0.5])
+                for (let b of [-0.5, 0.5])
+                    for (let c of [-0.5, 0.5])
+                        for (let d of [-0.5, 0.5]) verts.push([a, b, c, d]);
+
+            // 2. 8 vertices: permutations of (±1, 0, 0, 0)
+            const basis = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+            for (let b of basis) {
+                verts.push(b);
+                const nb = b.map(x => -x);
+                verts.push(nb);
+            }
+
+            // 3. 96 vertices: Even permutations of (±phi/2, ±1/2, ±1/2phi, 0)
+            // We use the full set and filter by nearest neighbor logic later or precise generation.
+            // Simplified construction: 
+            // Even permutations of POSITIONS of (val1, val2, val3, val4).
+            // AND all 16 sign combinations?
+            // "96 vertices are even permutations of (±φ/2, ±1/2, ±1/(2φ), 0)"
+
+            const vals = [0.5 * phi, 0.5, 0.5 / phi, 0];
+            const idxs = [
+                [0, 1, 2, 3], [0, 2, 3, 1], [0, 3, 1, 2],
+                [1, 2, 0, 3], [1, 3, 2, 0], [1, 0, 3, 2],
+                [2, 3, 0, 1], [2, 0, 1, 3], [2, 1, 3, 0],
+                [3, 0, 2, 1], [3, 1, 0, 2], [3, 2, 1, 0]
+            ];
+
+            for (let idx of idxs) {
+                const vRaw = [vals[idx[0]], vals[idx[1]], vals[idx[2]], vals[idx[3]]];
+                for (let i = 0; i < 16; i++) {
+                    let v = [...vRaw];
+                    for (let k = 0; k < 4; k++) v[k] *= ((i >> k) & 1 ? 1 : -1);
+                    verts.push(v);
+                }
+            }
+
+            // Uniqueness filter
+            let uniqueVerts = [];
+            let seen = new Set();
+            for (let v of verts) {
+                const key = v.map(f => Math.round(f * 1000)).join(',');
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueVerts.push(v);
+                }
+            }
+            verts = uniqueVerts;
+            // Should be 120 total.
+
+            // Edges: Nearest neighbors (len ~ 1.0)
+            let lines = [];
+            for (let i = 0; i < verts.length; i++) {
+                for (let j = i + 1; j < verts.length; j++) {
+                    if (Math.abs(distSq(verts[i], verts[j]) - 1.0) < 0.05) {
+                        lines.push([i, j]);
+                    }
+                }
+            }
+            return { verts, lines };
+        }
+
+        function generate120Cell() {
+            // 600 vertices.
+            // We can generate it as the dual of the 600-cell, 
+            // but finding centers of 600-cell tetrahedra is complex to code quickly.
+            // Let's use the explicit coordinates.
+            // Scaled so edge length fits visual.
+            const phi = (1 + Math.sqrt(5)) / 2;
+            const phi2 = phi * phi;
+            const iphi = 1 / phi;
+            const iphi2 = 1 / phi2;
+            const root5 = Math.sqrt(5);
+
+            let rawTypes = [
+                { vals: [2, 2, 0, 0], perms: 'all' },
+                { vals: [1, 1, 1, root5], perms: 'all' },
+                { vals: [phi, phi, phi, iphi2], perms: 'all' },
+                { vals: [iphi, phi, 1, 2], perms: 'even' },
+                { vals: [0, iphi2, 1, phi2], perms: 'even' }
+            ];
+
+            let verts = [];
+
+            function getPerms(arr, type) {
+                let res = [];
+                const perms4 = [
+                    [0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2], [0, 3, 2, 1],
+                    [1, 0, 2, 3], [1, 0, 3, 2], [1, 2, 0, 3], [1, 2, 3, 0], [1, 3, 0, 2], [1, 3, 2, 0],
+                    [2, 0, 1, 3], [2, 0, 3, 1], [2, 1, 0, 3], [2, 1, 3, 0], [2, 3, 0, 1], [2, 3, 1, 0],
+                    [3, 0, 1, 2], [3, 0, 2, 1], [3, 1, 0, 2], [3, 1, 2, 0], [3, 2, 0, 1], [3, 2, 1, 0]
+                ];
+                let evens = [
+                    [0, 1, 2, 3], [0, 2, 3, 1], [0, 3, 1, 2],
+                    [1, 2, 0, 3], [1, 3, 2, 0], [1, 0, 3, 2],
+                    [2, 3, 0, 1], [2, 0, 1, 3], [2, 1, 3, 0],
+                    [3, 0, 2, 1], [3, 1, 0, 2], [3, 2, 1, 0]
+                ];
+
+                let pList = (type === 'even') ? evens : perms4;
+                for (let p of pList) {
+                    res.push([arr[p[0]], arr[p[1]], arr[p[2]], arr[p[3]]]);
+                }
+                return res;
+            }
+
+            for (let t of rawTypes) {
+                let ps = getPerms(t.vals, t.perms);
+                for (let p of ps) {
+                    for (let i = 0; i < 16; i++) {
+                        let v = [...p];
+                        for (let k = 0; k < 4; k++) v[k] *= ((i >> k) & 1 ? 1 : -1);
+                        verts.push(v);
+                    }
+                }
+            }
+
+            let uniqueVerts = [];
+            let seen = new Set();
+            for (let v of verts) {
+                const key = v.map(f => Math.round(f * 1000)).join(',');
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueVerts.push(v);
+                }
+            }
+            verts = uniqueVerts;
+
+            // Edges. Radius is about 2.82.
+            // Nearest neighbors logic.
+            let minD = 999;
+            for (let i = 1; i < verts.length; i++) {
+                let d = distSq(verts[0], verts[i]);
+                if (d < minD && d > 0.01) minD = d;
+            }
+
+            let lines = [];
+            for (let i = 0; i < verts.length; i++) {
+                for (let j = i + 1; j < verts.length; j++) {
+                    if (Math.abs(distSq(verts[i], verts[j]) - minD) < 0.05) {
+                        lines.push([i, j]);
+                    }
+                }
+            }
+            return { verts, lines };
+        }
+
         function distSq(v1, v2) {
             let sum = 0;
             for (let i = 0; i < v1.length; i++) sum += (v1[i] - v2[i]) ** 2;
@@ -489,6 +646,21 @@
         }
 
         function getSimplexActual(dim) {
+            // Special regular tetrahedron override for 3D visual niceness
+            if (dim === 3) {
+                const verts = [
+                    [1, 1, 1],
+                    [1, -1, -1],
+                    [-1, 1, -1],
+                    [-1, -1, 1]
+                ];
+                let lines = [];
+                for (let i = 0; i < 4; i++)
+                    for (let j = i + 1; j < 4; j++) lines.push([i, j]);
+
+                return { verts, lines };
+            }
+
             let verts = [];
             // Recursive construction for height
             // Base case 1D: [-0.5, 0.5] width 1
@@ -560,6 +732,12 @@
             } else if (shapeType === '24cell') {
                 data = generate24Cell();
                 name = "24-Cell";
+            } else if (shapeType === '120cell') {
+                data = generate120Cell();
+                name = "120-Cell";
+            } else if (shapeType === '600cell') {
+                data = generate600Cell();
+                name = "600-Cell";
             }
 
             vertices = data.verts;
@@ -583,7 +761,7 @@
             edgeGeo.translate(0, 0.5, 0); // Pivot at bottom
             edgeGeo.rotateX(Math.PI / 2); // Point along Z initially
 
-            const edgeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
+            const edgeMat = new THREE.MeshStandardMaterial({ color: 0xff8f00, transparent: true, opacity: 0.6 });
 
             for (let i = 0; i < edges.length; i++) {
                 const mesh = new THREE.Mesh(edgeGeo, edgeMat);
