@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>High-Dimensional Polytope Visualizer</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #111;
+            color: white;
+            font-family: sans-serif;
+        }
+
+        #ui-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            pointer-events: auto;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background: #222;
+            color: white;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+        }
+
+        #polytope-name {
+            color: #4db8ff;
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+    <!-- Import Three.js and OrbitControls via CDN -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <div id="ui-container">
+        <h1>High-D Visualizer</h1>
+
+        <div class="control-group">
+            <label for="dimension">Dimension (N): <span id="dim-val">4</span></label>
+            <input type="range" id="dimension" min="1" max="8" value="4" step="1">
+        </div>
+
+        <div class="control-group">
+            <label for="shape">Polytope Type:</label>
+            <select id="shape">
+                <!-- Options populated dynamically -->
+            </select>
+        </div>
+
+        <div class="control-group" id="polygon-sides-group" style="display: none;">
+            <label for="polygon-sides">Number of Sides: <span id="sides-val">5</span></label>
+            <input type="range" id="polygon-sides" min="3" max="20" value="5" step="1">
+        </div>
+
+        <div id="polytope-name">Tesseract (4-Cube)</div>
+        <div style="font-size: 0.8rem; color: #aaa; margin-top: 10px;">
+            Drag to rotate view.<br>
+            Object auto-rotates in 4D.
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Configuration ---
+        const SPHERE_SIZE = 0.08;
+        const CYLINDER_THICKNESS = 0.02;
+        const ROTATION_SPEED = 0.005;
+
+        // --- Global Variables ---
+        let scene, camera, renderer, controls;
+        let vertices = []; // High-D vertices
+        let edges = [];    // Indices of connected vertices
+        let renderedNodes = [];
+        let renderedEdges = [];
+        let group;         // Three.js group to hold the shape
+        let dimension = 4;
+        let shapeType = 'cube';
+        let polygonSides = 5;
+        let theta = 0;     // Angle for high-d rotation
+
+        init();
+        animate();
+
+        function init() {
+            // 1. Setup Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x111111);
+
+            // 2. Setup Camera
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 0, 6);
+
+            // 3. Setup Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // 4. Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // 5. Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(1, 1, 2);
+            scene.add(directionalLight);
+
+            // 6. Shape Group
+            group = new THREE.Group();
+            scene.add(group);
+
+            // 7. UI Listeners
+            document.getElementById('dimension').addEventListener('input', (e) => {
+                dimension = parseInt(e.target.value);
+                document.getElementById('dim-val').innerText = dimension;
+                updateShapeOptions();
+                updateShape();
+            });
+
+            document.getElementById('shape').addEventListener('change', (e) => {
+                shapeType = e.target.value;
+                updateShape();
+            });
+
+            document.getElementById('polygon-sides').addEventListener('input', (e) => {
+                polygonSides = parseInt(e.target.value);
+                document.getElementById('sides-val').innerText = polygonSides;
+                updateShape();
+            });
+
+            window.addEventListener('resize', onWindowResize);
+
+            // Initial Draw
+            updateShapeOptions();
+            updateShape();
+        }
+
+        function updateShapeOptions() {
+            const shapeSelect = document.getElementById('shape');
+            const sideGroup = document.getElementById('polygon-sides-group');
+            shapeSelect.innerHTML = '';
+            sideGroup.style.display = 'none';
+
+            if (dimension === 1) {
+                const opt = document.createElement('option');
+                opt.value = 'line';
+                opt.text = 'Line Segment';
+                shapeSelect.appendChild(opt);
+                shapeType = 'line';
+            } else if (dimension === 2) {
+                const opt = document.createElement('option');
+                opt.value = 'polygon';
+                opt.text = 'Regular Polygon';
+                shapeSelect.appendChild(opt);
+                shapeType = 'polygon';
+                sideGroup.style.display = 'block';
+            } else if (dimension === 3) {
+                const opts = [
+                    { val: 'simplex', txt: 'Tetrahedron (Simplex)' },
+                    { val: 'cube', txt: 'Cube (Hypercube)' },
+                    { val: 'cross', txt: 'Octahedron (Cross)' },
+                    { val: 'dodecahedron', txt: 'Dodecahedron' },
+                    { val: 'icosahedron', txt: 'Icosahedron' }
+                ];
+                opts.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.val;
+                    opt.text = o.txt;
+                    shapeSelect.appendChild(opt);
+                });
+                if (!opts.find(o => o.val === shapeType)) shapeType = 'cube';
+                shapeSelect.value = shapeType;
+            } else if (dimension === 4) {
+                const opts = [
+                    { val: 'simplex', txt: '5-Cell (Simplex)' },
+                    { val: 'cube', txt: 'Tesseract (Hypercube)' },
+                    { val: 'cross', txt: '16-Cell (Cross)' },
+                    { val: '24cell', txt: '24-Cell' }
+                ];
+                opts.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.val;
+                    opt.text = o.txt;
+                    shapeSelect.appendChild(opt);
+                });
+                if (!opts.find(o => o.val === shapeType)) shapeType = 'cube';
+                shapeSelect.value = shapeType;
+            } else {
+                const opts = [
+                    { val: 'simplex', txt: 'Simplex' },
+                    { val: 'cube', txt: 'Hypercube' },
+                    { val: 'cross', txt: 'Cross-Polytope' }
+                ];
+                opts.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.val;
+                    opt.text = o.txt;
+                    shapeSelect.appendChild(opt);
+                });
+                if (!opts.find(o => o.val === shapeType)) shapeType = 'cube';
+                shapeSelect.value = shapeType;
+            }
+        }
+
+        // --- Geometry Generators ---
+
+        function generateLine() {
+            return {
+                verts: [[-1], [1]],
+                lines: [[0, 1]]
+            };
+        }
+
+        function generatePolygon(n) {
+            let verts = [];
+            let lines = [];
+            for (let i = 0; i < n; i++) {
+                const theta = (i / n) * 2 * Math.PI;
+                verts.push([Math.cos(theta), Math.sin(theta)]);
+                lines.push([i, (i + 1) % n]);
+            }
+            return { verts, lines };
+        }
+
+        function generateHypercube(dim) {
+            // 2^dim vertices
+            let verts = [];
+            const count = Math.pow(2, dim);
+
+            for (let i = 0; i < count; i++) {
+                let v = [];
+                for (let j = 0; j < dim; j++) {
+                    // Create binary representation, map 0 -> -1, 1 -> 1
+                    v.push(((i >> j) & 1) ? 1 : -1);
+                }
+                verts.push(v);
+            }
+
+            // Edges: Connect if Hamming distance is 1
+            let lines = [];
+            for (let i = 0; i < count; i++) {
+                for (let j = i + 1; j < count; j++) {
+                    let diff = 0;
+                    for (let k = 0; k < dim; k++) {
+                        if (verts[i][k] !== verts[j][k]) diff++;
+                    }
+                    if (diff === 1) lines.push([i, j]);
+                }
+            }
+            return { verts, lines };
+        }
+
+        function generateSimplex(dim) {
+            // dim + 1 vertices
+            let verts = [];
+            // This is a simplified construction of a regular simplex
+            // Start with identity matrix rows, but that's not centered.
+            // Using a recursive approach to center it is better, but complex.
+            // Simple approach: Vertices are e_i for i=1..dim+1 in (dim+1) space, on hyperplane sum=1
+
+            // Standard construction:
+            const n = dim;
+            // Initialize vertices
+            for (let i = 0; i <= n; i++) {
+                let v = new Array(n).fill(0);
+                verts.push(v);
+            }
+
+            // Set coordinates (Mathy bit to make it regular)
+            for (let i = 0; i < n; i++) {
+                let r = Math.sqrt(1 - 1 / (n + 1)); // radius? roughly.
+                // Simplified: Just use randomized regular points or standard logic.
+                // Let's use the explicit coordinate formula for n-simplex
+            }
+
+            // Fallback: Easier logic for visualization purposes
+            // Place n+1 points roughly equidistant. 
+            // 3D Simplex = Tetrahedron. 
+            // We will use a randomized approximation for >4D or strict math for small D.
+
+            // Let's stick to Cross-Polytope and Cube for "perfect" math in this snippet 
+            // as generic simplex coordinates are verbose to code in one block.
+            // REPLACING WITH CROSS POLYTOPE LOGIC for generic Simplex request
+            // Actually, let's do Cross-Polytope (Orthoplex) first.
+
+            return generateCrossPolytope(dim); // Placeholder if simplex is too complex for this snippet
+        }
+
+        function generateCrossPolytope(dim) {
+            // 2*dim vertices. Permutations of (+/- 1, 0, 0...)
+            let verts = [];
+            for (let i = 0; i < dim; i++) {
+                let v1 = new Array(dim).fill(0);
+                v1[i] = 1;
+                verts.push(v1);
+
+                let v2 = new Array(dim).fill(0);
+                v2[i] = -1;
+                verts.push(v2);
+            }
+
+            let lines = [];
+            for (let i = 0; i < verts.length; i++) {
+                for (let j = i + 1; j < verts.length; j++) {
+                    // Connect all except opposites
+                    let isOpposite = true;
+                    for (let k = 0; k < dim; k++) {
+                        if (verts[i][k] !== -verts[j][k]) {
+                            isOpposite = false;
+                            break;
+                        }
+                    }
+                    if (!isOpposite) {
+                        // For cross polytope, edges only exist between orthogonal vectors?
+                        // Actually, edges connect any v_i to v_j if they are not opposite.
+                        // But strictly, that makes a lot of edges.
+                        // Definition: Edges connect vertices that are orthogonal.
+                        let dot = 0;
+                        for (let k = 0; k < dim; k++) dot += verts[i][k] * verts[j][k];
+                        if (Math.abs(dot) < 0.1) { // orthogonal
+                            lines.push([i, j]);
+                        }
+                    }
+                }
+            }
+            return { verts, lines };
+            // Fallback for N-Simplex using standard construction
+            // Vertices are standard basis vectors in R^(dim+1) projected to hyperplane sum=1
+            // Or use the regular simplex coordinates logic if simpler.
+            // Let's use the recursive construction or simply Cross-Polytope generation logic for now if logic fails
+            // But we have getSimplexActual below which is good.
+            return getSimplexActual(dim);
+        }
+
+        // Special 3D Shapes
+        function generateIcosahedron() {
+            const phi = (1 + Math.sqrt(5)) / 2;
+            let verts = [];
+            // (0, ±1, ±phi) and cyclic perms
+            const perms = [
+                [0, 1, phi], [0, 1, -phi], [0, -1, phi], [0, -1, -phi],
+                [1, phi, 0], [1, -phi, 0], [-1, phi, 0], [-1, -phi, 0],
+                [phi, 0, 1], [phi, 0, -1], [-phi, 0, 1], [-phi, 0, -1]
+            ];
+            verts = perms;
+
+            // Edges: dist = 2
+            let lines = [];
+            for (let i = 0; i < verts.length; i++) {
+                for (let j = i + 1; j < verts.length; j++) {
+                    const d2 = distSq(verts[i], verts[j]);
+                    if (Math.abs(d2 - 4) < 0.1) lines.push([i, j]);
+                }
+            }
+            return { verts, lines };
+        }
+
+        function generateDodecahedron() {
+            const phi = (1 + Math.sqrt(5)) / 2;
+            let verts = [];
+            // (±1, ±1, ±1)
+            // (0, ±1/phi, ±phi) ...
+
+            // 8 Cube vertices
+            for (let x of [-1, 1])
+                for (let y of [-1, 1])
+                    for (let z of [-1, 1])
+                        verts.push([x, y, z]);
+
+            // 12 other vertices
+            const invPhi = 1 / phi;
+            const perms = [
+                [0, invPhi, phi], [0, invPhi, -phi], [0, -invPhi, phi], [0, -invPhi, -phi],
+                [invPhi, phi, 0], [invPhi, -phi, 0], [-invPhi, phi, 0], [-invPhi, -phi, 0],
+                [phi, 0, invPhi], [phi, 0, -invPhi], [-phi, 0, invPhi], [-phi, 0, -invPhi]
+            ];
+            verts.push(...perms);
+
+            // Edge length depends on scaling, but for standard dodecahedron side is 2/phi * sin(36..) check
+            // Actually, distance between closest points implies edges.
+            // Closest dist squared ~0.7-ish logic ? 
+            // Neighbors of (1,1,1) are (0, 1/phi, phi) etc 
+            // Dist sq between (1,1,1) and (0, 0.618, 1.618)
+            // (1)^2 + (0.382)^2 + (-0.618)^2 = 1 + 0.145 + 0.381 = ~1.52
+            // Edge length is sqrt(5) - 1 ?? No.
+            // Let's just find nearest neighbors.
+            let lines = [];
+            // Find min distance
+            let minD = 999;
+            for (let i = 1; i < verts.length; i++) {
+                const d = distSq(verts[0], verts[i]);
+                if (d < minD) minD = d;
+            }
+            const epsilon = 0.1;
+
+            for (let i = 0; i < verts.length; i++) {
+                for (let j = i + 1; j < verts.length; j++) {
+                    const d = distSq(verts[i], verts[j]);
+                    if (Math.abs(d - minD) < epsilon) lines.push([i, j]);
+                }
+            }
+            return { verts, lines };
+        }
+
+        // Special 4D Shapes
+        function generate24Cell() {
+            // Permutations of (±1, ±1, 0, 0)
+            let verts = [];
+            // 4 positions, choose 2 for non-zero. 4C2 = 6 pairs. 
+            // Each pair has 4 sign combos (++ +- -+ --). 6*4 = 24 vertices.
+
+            const pairs = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]];
+            for (let p of pairs) {
+                const [a, b] = p;
+                for (let sa of [-1, 1]) {
+                    for (let sb of [-1, 1]) {
+                        let v = [0, 0, 0, 0];
+                        v[a] = sa;
+                        v[b] = sb;
+                        verts.push(v);
+                    }
+                }
+            }
+
+            // Edges: Connect closest neighbors. 
+            // Norm sq is 1+1=2.
+            // Distance between (1,1,0,0) and (1,0,1,0) is (0-0)^2 + (1-0)^2 + (0-1)^2 + 0 = 2.
+            // Distance to (1, -1, 0, 0) is 0^2 + 2^2 = 4.
+            // So closest neighbors have distSq = 2.
+            // Wait, (1,1,0,0) and (0.5, 0.5...)? No, coordinates are integers here.
+
+            let lines = [];
+            for (let i = 0; i < verts.length; i++) {
+                for (let j = i + 1; j < verts.length; j++) {
+                    if (Math.abs(distSq(verts[i], verts[j]) - 2.0) < 0.1) {
+                        lines.push([i, j]);
+                    }
+                }
+            }
+            return { verts, lines };
+        }
+
+        function distSq(v1, v2) {
+            let sum = 0;
+            for (let i = 0; i < v1.length; i++) sum += (v1[i] - v2[i]) ** 2;
+            return sum;
+        }
+
+        function getSimplexActual(dim) {
+            let verts = [];
+            // Recursive construction for height
+            // Base case 1D: [-0.5, 0.5] width 1
+            // Hard to do generic N without matrices.
+            // Let's use the standard "Standard Simplex" subset of R^(n+1)
+            // Vertices are standard basis vectors of R^(n+1): (1,0,0...), (0,1,0...)...
+
+            for (let i = 0; i <= dim; i++) {
+                let v = new Array(dim + 1).fill(0);
+                v[i] = 1;
+                // Center it: subtract 1/(dim+1) from all coords
+                const center = 1 / (dim + 1);
+                for (let k = 0; k <= dim; k++) v[k] -= center;
+                verts.push(v);
+            }
+
+            // Edges: Every vertex connects to every other vertex
+            // Scale up for visibility
+            for (let i = 0; i < verts.length; i++) {
+                for (let k = 0; k < verts[i].length; k++) verts[i][k] *= 1.5;
+            }
+
+            let lines = [];
+            for (let i = 0; i < verts.length; i++) {
+                for (let j = i + 1; j < verts.length; j++) {
+                    lines.push([i, j]);
+                }
+            }
+            return { verts, lines };
+        }
+
+
+        function updateShape() {
+            // Clear existing
+            while (group.children.length > 0) {
+                group.remove(group.children[0]);
+            }
+            renderedNodes = [];
+            renderedEdges = [];
+
+            // Generate Math Data
+            let data;
+            let name = "";
+
+            if (dimension === 1) {
+                data = generateLine();
+                name = "Line Segment";
+            } else if (dimension === 2) {
+                data = generatePolygon(polygonSides);
+                name = `Regular ${polygonSides}-gon`;
+            } else if (shapeType === 'cube') {
+                data = generateHypercube(dimension);
+                const names = ["", "", "", "Cube", "Tesseract", "Penteract", "Hexeract", "Hepteract"];
+                name = names[dimension] || `${dimension}-Cube`;
+            } else if (shapeType === 'cross') {
+                data = generateCrossPolytope(dimension);
+                const names = ["", "", "", "Octahedron", "16-Cell", "32-Cell", "64-Cell"];
+                name = names[dimension] || `${dimension}-Orthoplex`;
+            } else if (shapeType === 'simplex') {
+                data = getSimplexActual(dimension);
+                const names = ["", "", "", "Tetrahedron", "Pentachoron", "5-Simplex", "6-Simplex"];
+                name = names[dimension] || `${dimension}-Simplex`;
+            } else if (shapeType === 'icosahedron') {
+                data = generateIcosahedron();
+                name = "Icosahedron";
+            } else if (shapeType === 'dodecahedron') {
+                data = generateDodecahedron();
+                name = "Dodecahedron";
+            } else if (shapeType === '24cell') {
+                data = generate24Cell();
+                name = "24-Cell";
+            }
+
+            vertices = data.verts;
+            edges = data.lines;
+            document.getElementById('polytope-name').innerText = name;
+
+            // Create Visual Objects (Pool)
+            // Nodes (Spheres)
+            const nodeGeo = new THREE.SphereGeometry(SPHERE_SIZE, 16, 16);
+            const nodeMat = new THREE.MeshStandardMaterial({ color: 0x00ffcc, roughness: 0.4 });
+
+            for (let i = 0; i < vertices.length; i++) {
+                const mesh = new THREE.Mesh(nodeGeo, nodeMat);
+                group.add(mesh);
+                renderedNodes.push(mesh);
+            }
+
+            // Edges (Cylinders)
+            // We use a long thin cylinder that we scale and orient later
+            const edgeGeo = new THREE.CylinderGeometry(CYLINDER_THICKNESS, CYLINDER_THICKNESS, 1, 8);
+            edgeGeo.translate(0, 0.5, 0); // Pivot at bottom
+            edgeGeo.rotateX(Math.PI / 2); // Point along Z initially
+
+            const edgeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
+
+            for (let i = 0; i < edges.length; i++) {
+                const mesh = new THREE.Mesh(edgeGeo, edgeMat);
+                group.add(mesh);
+                renderedEdges.push(mesh);
+            }
+        }
+
+        // --- Projection Logic ---
+
+        function project(v, dim) {
+            // High-D Rotation (Rotate in the XW plane if dim >= 4)
+            let pv = [...v];
+
+            // Simple rotation in 4th dimension (X-W rotation)
+            // If dim < 4, this does nothing extra
+            if (dim >= 4) {
+                const angle = theta;
+                const x = pv[0];
+                const w = pv[3];
+
+                pv[0] = x * Math.cos(angle) - w * Math.sin(angle);
+                pv[3] = x * Math.sin(angle) + w * Math.cos(angle);
+            }
+
+            // Recursive perspective projection down to 3D
+            // Formula: new_x = x / (distance - w)
+            let currentV = pv;
+
+            // Project down until we have 3 elements
+            while (currentV.length > 3) {
+                const w = currentV.pop(); // Get last dimension
+                const scale = 2 / (3 - w); // Perspective factor (camera at w=3)
+
+                for (let i = 0; i < currentV.length; i++) {
+                    currentV[i] *= scale;
+                }
+            }
+
+            // Pad if less than 3 dimensions
+            const x = currentV.length > 0 ? currentV[0] : 0;
+            const y = currentV.length > 1 ? currentV[1] : 0;
+            const z = currentV.length > 2 ? currentV[2] : 0;
+
+            return new THREE.Vector3(x, y, z);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            theta += ROTATION_SPEED;
+            controls.update();
+
+            // Update Positions
+            const projectedPositions = [];
+
+            // 1. Calculate new 3D positions for all vertices
+            for (let i = 0; i < vertices.length; i++) {
+                const p3 = project(vertices[i], vertices[i].length);
+                projectedPositions.push(p3);
+
+                renderedNodes[i].position.copy(p3);
+            }
+
+            // 2. Update Edges to connect the new positions
+            for (let i = 0; i < edges.length; i++) {
+                const idxA = edges[i][0];
+                const idxB = edges[i][1];
+
+                const start = projectedPositions[idxA];
+                const end = projectedPositions[idxB];
+
+                const mesh = renderedEdges[i];
+                mesh.position.copy(start);
+                mesh.lookAt(end);
+
+                const dist = start.distanceTo(end);
+                mesh.scale.set(1, 1, dist); // Scale Z (length)
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+
+</html>
