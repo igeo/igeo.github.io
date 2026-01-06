@@ -6,25 +6,87 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>A Science Bowl Timer and Scorekeeper</title>
   <script>
+    var halfTime = null;
+    var questionTime = null;
+    var isBonusTimer = false;
+    var halfTimer, buzzerSound, fiveSecondsSound;
+
     function init() {
+      halfTime = null;
+      questionTime = null;
+      isBonusTimer = false;
+      halfTimer = document.getElementById("halfSeconds");
+      buzzerSound = document.getElementById('wrongBuzzer_audio');
+      fiveSecondsSound = document.getElementById('fiveSeconds_audio');
+
+      const state = loadState();
+      if (state) {
+        document.getElementById("teamAscore").value = state.teamAscore || 0;
+        document.getElementById("teamBscore").value = state.teamBscore || 0;
+        document.getElementById("halfSeconds").value = state.halfSeconds || 720;
+        document.getElementById("halfSecondsDisp").value = state.halfSecondsDisp || secondsInMinutes(720);
+        document.getElementById("questionSeconds").value = state.questionSeconds || 0;
+        isBonusTimer = !!state.isBonusTimer;
+        document.getElementById("log").innerHTML = state.log || "";
+        document.getElementById("clockDiv").style.backgroundColor = state.clockColor || "white";
+
+        if (state.halfTimerRunning) {
+          startTimer();
+        }
+        if (state.questionTimerRunning) {
+          // Restart question timer interval
+          if (questionTime != null) window.clearInterval(questionTime);
+          questionTime = window.setInterval(decreaseQtimer, 1000);
+        }
+        return;
+      }
+
       document.getElementById("teamAscore").value = 0;
       document.getElementById("teamBscore").value = 0;
 
-      halfTimer = document.getElementById("halfSeconds");
       halfTimer.value = 720;
       document.getElementById("halfSecondsDisp").value = secondsInMinutes(halfTimer.value);
       document.getElementById("questionSeconds").value = 0;
-
-      halfTime = null; questionTime = null;
-      isBonusTimer = false;
-
-      buzzerSound = document.getElementById('wrongBuzzer_audio');
-      fiveSecondsSound = document.getElementById('fiveSeconds_audio');
 
       logS = "Log of score changes will be kept here, just in case.<br> <br> Start of match.  Good luck teams!<br>";
       document.getElementById("log").innerHTML = logS;
       console.log(logS);
       window.scrollTo(0, 0);
+    }
+
+    function saveState() {
+      const state = {
+        teamAscore: document.getElementById("teamAscore").value,
+        teamBscore: document.getElementById("teamBscore").value,
+        halfSeconds: document.getElementById("halfSeconds").value,
+        halfSecondsDisp: document.getElementById("halfSecondsDisp").value,
+        questionSeconds: document.getElementById("questionSeconds").value,
+        isBonusTimer: isBonusTimer,
+        halfTimerRunning: halfTime !== null,
+        questionTimerRunning: questionTime !== null,
+        log: document.getElementById("log").innerHTML,
+        clockColor: document.getElementById("clockDiv").style.backgroundColor
+      };
+      localStorage.setItem('nsb_scorekeeper_state', JSON.stringify(state));
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem('nsb_scorekeeper_state');
+      if (!saved) return null;
+
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Error loading state:", e);
+        return null;
+      }
+    }
+
+    function newMatch() {
+      if (confirm("Are you sure you want to start a new match? This will clear all current scores and logs.")) {
+        localStorage.removeItem('nsb_scorekeeper_state');
+        location.reload();
+      }
     }
 
     function secondsInMinutes(secs) {
@@ -42,6 +104,7 @@
       logS = "Score for team " + team + " changed by " + amount + "<br>";
       document.getElementById("log").innerHTML += logS;
       console.log(logS);
+      saveState();
       window.scrollTo(0, 0);
     }
 
@@ -57,6 +120,7 @@
       }
 
       document.getElementById("halfSecondsDisp").value = secondsInMinutes(halfTimer.value);
+      saveState();
     }
 
     function minutesToSeconds(s) {
@@ -71,18 +135,21 @@
       document.getElementById("halfSeconds").value = minutesToSeconds(document.getElementById("halfSecondsDisp").value);
       halfTime = window.setInterval(decreaseHalfTimer, 1000);
       document.getElementById("clockDiv").style.backgroundColor = "white";
+      saveState();
     }
 
     function pauseTimer() {
       if (halfTime != null)
         window.clearInterval(halfTime);
+      saveState();
     }
 
     function resetTimer() {
       if (halfTime != null) window.clearInterval(halfTime);
-      document.getElementById("halfSeconds").value = "480";
-      document.getElementById("halfSecondsDisp").value = secondsInMinutes(halfTimer.value);
+      document.getElementById("halfSeconds").value = "720";
+      document.getElementById("halfSecondsDisp").value = secondsInMinutes(720);
       document.getElementById("clockDiv").style.backgroundColor = "white";
+      saveState();
     }
 
 
@@ -102,6 +169,7 @@
         document.getElementById("clockDiv").style.backgroundColor = "orange";
         fiveSecondsSound.play();
       }
+      saveState();
     }
 
     function startTossup() {
@@ -111,6 +179,7 @@
         window.clearInterval(questionTime);
       questionTime = window.setInterval(decreaseQtimer, 1000);
       document.getElementById("clockDiv").style.backgroundColor = "white";
+      saveState();
     }
 
     function startBonus() {
@@ -120,6 +189,7 @@
         window.clearInterval(questionTime);
       questionTime = window.setInterval(decreaseQtimer, 1000);
       document.getElementById("clockDiv").style.backgroundColor = "white";
+      saveState();
     }
 
     function clearQtimer() {
@@ -128,6 +198,7 @@
       if (questionTime != null)
         window.clearInterval(questionTime);
       document.getElementById("clockDiv").style.backgroundColor = "white";
+      saveState();
     }
   </script>
 
@@ -190,6 +261,8 @@
       <button type="button" onclick="startTimer();" id="startTimer">Start</button>
       <button type="button" onclick="pauseTimer();" id="pauseTimer">Pause</button>
       <button type="button" onclick="resetTimer();" id="resetTimer">Reset</button>
+      <button type="button" onclick="newMatch();" id="newMatch"
+        style="margin-left: 10px; background-color: #f44336; color: white;">New Match</button>
     </div>
 
     <div style="float:left">
