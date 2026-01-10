@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Provider LLM Chat</title>
+    <title>BYOK Chat - Bring Your Own Key</title>
 
     <!-- External Libraries -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -33,6 +33,8 @@
             --success: #10b981;
             --warning: #f59e0b;
             --error: #ef4444;
+            --user-bubble: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --assistant-bubble: #1e293b;
         }
 
         body {
@@ -48,7 +50,7 @@
             margin: 0 auto;
             padding: 20px;
             display: grid;
-            grid-template-columns: 350px 1fr;
+            grid-template-columns: 320px 1fr;
             gap: 20px;
             min-height: 100vh;
         }
@@ -75,26 +77,72 @@
             background-clip: text;
         }
 
+        /* Settings Gear Button */
+        .settings-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-toggle:hover {
+            border-color: var(--primary-accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .settings-toggle span {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .settings-toggle svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--primary-accent);
+            transition: transform 0.3s ease;
+        }
+
+        .settings-toggle.open svg {
+            transform: rotate(90deg);
+        }
+
+        .settings-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .settings-panel.open {
+            max-height: 600px;
+        }
+
         .api-key-section {
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
 
         .api-key-section h3 {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
         .api-key-section input {
             width: 100%;
-            padding: 12px;
-            background: var(--secondary-bg);
+            padding: 10px 12px;
+            background: var(--primary-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             color: var(--text-primary);
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             transition: all 0.3s ease;
         }
 
@@ -181,10 +229,10 @@
 
         .btn {
             width: 100%;
-            padding: 12px 20px;
+            padding: 10px 16px;
             border: none;
             border-radius: 8px;
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -192,28 +240,17 @@
             letter-spacing: 0.05em;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
-            color: white;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
-        }
-
         .btn-danger {
             background: var(--error);
             color: white;
-            margin-top: 12px;
+            margin-top: 10px;
         }
 
         .btn-danger:hover {
             background: #dc2626;
         }
 
-        /* Chat Area Styles */
+        /* Modern Chat Styles */
         .chat-area {
             display: flex;
             flex-direction: column;
@@ -230,10 +267,13 @@
             border-radius: 16px;
             margin-bottom: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
         .message {
-            margin-bottom: 24px;
+            display: flex;
             animation: fadeIn 0.3s ease;
         }
 
@@ -249,75 +289,94 @@
             }
         }
 
-        .message-header {
+        /* User messages - right aligned */
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        /* Assistant messages - left aligned */
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-wrapper {
+            max-width: 75%;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .message-role {
-            font-weight: 600;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .message.user .message-wrapper {
+            align-items: flex-end;
         }
 
-        .message-role.user {
-            color: var(--primary-accent);
+        .message.assistant .message-wrapper {
+            align-items: flex-start;
         }
 
-        .message-role.assistant {
-            color: var(--secondary-accent);
+        .message-bubble {
+            padding: 14px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-bubble {
+            background: var(--user-bubble);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-bubble {
+            background: var(--assistant-bubble);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
         }
 
         .message-meta {
             display: flex;
-            gap: 12px;
-            font-size: 0.75rem;
+            gap: 8px;
+            font-size: 0.7rem;
             color: var(--text-secondary);
+            padding: 0 4px;
+            flex-wrap: wrap;
         }
 
         .message-meta span {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
 
-        .message-content {
-            background: var(--secondary-bg);
-            padding: 16px;
-            border-radius: 12px;
-            line-height: 1.6;
-            border-left: 3px solid var(--border-color);
-        }
-
-        .message.user .message-content {
-            border-left-color: var(--primary-accent);
-        }
-
-        .message.assistant .message-content {
-            border-left-color: var(--secondary-accent);
-        }
-
-        .message-content pre {
-            background: var(--primary-bg);
+        /* Code blocks in bubbles */
+        .message-bubble pre {
+            background: rgba(0, 0, 0, 0.3);
             padding: 12px;
             border-radius: 8px;
             overflow-x: auto;
-            margin: 12px 0;
+            margin: 8px 0;
         }
 
-        .message-content code {
-            background: var(--primary-bg);
+        .message-bubble code {
+            background: rgba(0, 0, 0, 0.3);
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.875rem;
         }
 
-        .message-content pre code {
+        .message-bubble pre code {
             background: none;
             padding: 0;
+        }
+
+        /* Math rendering */
+        .message-bubble .katex {
+            font-size: 1.05em;
+        }
+
+        .message-bubble .katex-display {
+            margin: 12px 0;
         }
 
         /* Input Area */
@@ -337,10 +396,10 @@
 
         .input-form textarea {
             flex: 1;
-            padding: 12px 16px;
+            padding: 14px 18px;
             background: var(--secondary-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 14px;
             color: var(--text-primary);
             font-size: 0.9375rem;
             resize: none;
@@ -357,20 +416,21 @@
         }
 
         .input-form button {
-            padding: 12px 24px;
+            padding: 14px 28px;
             background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             white-space: nowrap;
+            font-size: 0.9375rem;
         }
 
         .input-form button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
         }
 
         .input-form button:disabled {
@@ -388,7 +448,7 @@
         .loading span {
             width: 8px;
             height: 8px;
-            background: var(--primary-accent);
+            background: white;
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
@@ -443,6 +503,10 @@
                 position: relative;
                 top: 0;
             }
+
+            .message-wrapper {
+                max-width: 85%;
+            }
         }
     </style>
 </head>
@@ -451,25 +515,37 @@
     <div class="container">
         <!-- Sidebar -->
         <div class="sidebar">
-            <h2>⚡ LLM Chat</h2>
+            <h2>🔑 BYOK Chat</h2>
 
-            <!-- API Keys -->
-            <div class="api-key-section">
-                <h3>🔑 Gemini API Key</h3>
-                <input type="password" id="gemini-key" placeholder="Enter your Gemini API key">
+            <!-- Settings Toggle -->
+            <div class="settings-toggle" id="settings-toggle">
+                <span>⚙️ API Settings</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path
+                        d="M9.29 6.71a.996.996 0 0 0 0 1.41L13.17 12l-3.88 3.88a.996.996 0 1 0 1.41 1.41l4.59-4.59a.996.996 0 0 0 0-1.41L10.7 6.7c-.38-.38-1.02-.38-1.41.01z" />
+                </svg>
             </div>
 
-            <div class="api-key-section">
-                <h3>🔑 OpenAI API Key</h3>
-                <input type="password" id="openai-key" placeholder="Enter your OpenAI API key">
-            </div>
+            <!-- Collapsible Settings Panel -->
+            <div class="settings-panel" id="settings-panel">
+                <!-- API Keys -->
+                <div class="api-key-section">
+                    <h3>🔷 Gemini API Key</h3>
+                    <input type="password" id="gemini-key" placeholder="Enter Gemini API key">
+                </div>
 
-            <div class="api-key-section">
-                <h3>🔑 Anthropic API Key</h3>
-                <input type="password" id="anthropic-key" placeholder="Enter your Anthropic API key">
-            </div>
+                <div class="api-key-section">
+                    <h3>🟢 OpenAI API Key</h3>
+                    <input type="password" id="openai-key" placeholder="Enter OpenAI API key">
+                </div>
 
-            <button class="btn btn-danger" id="clear-keys">Clear All Keys</button>
+                <div class="api-key-section">
+                    <h3>🟣 Anthropic API Key</h3>
+                    <input type="password" id="anthropic-key" placeholder="Enter Anthropic API key">
+                </div>
+
+                <button class="btn btn-danger" id="clear-keys">Clear All Keys</button>
+            </div>
 
             <!-- Model Selection -->
             <div class="model-select">
@@ -498,8 +574,9 @@
                     <label for="since-date">Since:</label>
                     <input type="date" id="since-date">
                 </div>
-                <button class="btn btn-danger" id="reset-costs" style="margin-top: 12px; font-size: 0.75rem;">Reset Cost
-                    Tracking</button>
+                <button class="btn btn-danger" id="reset-costs">Reset Tracking</button>
+                <button class="btn btn-danger" id="clear-chat" style="margin-top: 8px; font-size: 0.75rem;">Clear
+                    Chat</button>
             </div>
         </div>
 
@@ -508,7 +585,7 @@
             <div class="chat-messages" id="messages"></div>
             <div class="input-area">
                 <form class="input-form" id="chat-form">
-                    <textarea id="message-input" placeholder="Type your message here..." rows="2"></textarea>
+                    <textarea id="message-input" placeholder="Type your message..." rows="2"></textarea>
                     <button type="submit" id="send-btn">Send</button>
                 </form>
             </div>
@@ -529,6 +606,8 @@
         // Storage Keys
         const KEYS_STORAGE = 'llm_chat_api_keys';
         const USAGE_STORAGE = 'llm_chat_usage';
+        const HISTORY_STORAGE = 'llm_chat_history';
+        const METADATA_STORAGE = 'llm_chat_metadata';
 
         // State
         let conversationHistory = [];
@@ -537,14 +616,25 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadAPIKeys();
             loadUsageData();
+            loadChatHistory();
+            setupSinceDate();
             setupEventListeners();
             updateCostDisplay();
 
-            // Set default date to 30 days ago
-            const defaultDate = new Date();
-            defaultDate.setDate(defaultDate.getDate() - 30);
-            document.getElementById('since-date').valueAsDate = defaultDate;
+            // Configure marked renderer for better math support
+            marked.setOptions({
+                breaks: true,
+                gfm: true
+            });
         });
+
+        // Settings Panel Toggle
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            const toggle = document.getElementById('settings-toggle');
+            panel.classList.toggle('open');
+            toggle.classList.toggle('open');
+        }
 
         // Load API Keys from localStorage
         function loadAPIKeys() {
@@ -599,16 +689,69 @@
             document.getElementById('total-cost').textContent = totalCost.toFixed(4);
         }
 
+        // Setup Since Date
+        function setupSinceDate() {
+            const usage = loadUsageData();
+            const metadata = JSON.parse(localStorage.getItem(METADATA_STORAGE) || '{}');
+
+            let sinceDate;
+            if (metadata.costResetDate) {
+                // Use the date when costs were last reset
+                sinceDate = new Date(metadata.costResetDate);
+            } else if (usage.length > 0) {
+                // Use the date of the first usage entry
+                const dates = usage.map(u => new Date(u.date));
+                sinceDate = new Date(Math.min(...dates));
+            } else {
+                // Default to today if no data
+                sinceDate = new Date();
+            }
+
+            document.getElementById('since-date').valueAsDate = sinceDate;
+        }
+
         // Reset Cost Tracking
         function resetCosts() {
             if (confirm('Are you sure you want to reset all cost tracking data?')) {
                 localStorage.removeItem(USAGE_STORAGE);
+                // Store the reset date
+                const metadata = { costResetDate: new Date().toISOString() };
+                localStorage.setItem(METADATA_STORAGE, JSON.stringify(metadata));
+                setupSinceDate();
                 updateCostDisplay();
+            }
+        }
+
+        // Load Chat History
+        function loadChatHistory() {
+            const history = localStorage.getItem(HISTORY_STORAGE);
+            if (history) {
+                conversationHistory = JSON.parse(history);
+                // Render existing messages
+                conversationHistory.forEach(msg => {
+                    addMessage(msg.role, msg.content, msg.meta || {});
+                });
+            }
+        }
+
+        // Save Chat History
+        function saveChatHistory() {
+            localStorage.setItem(HISTORY_STORAGE, JSON.stringify(conversationHistory));
+        }
+
+        // Clear Chat History
+        function clearChat() {
+            if (confirm('Are you sure you want to clear the chat history?')) {
+                conversationHistory = [];
+                localStorage.removeItem(HISTORY_STORAGE);
+                document.getElementById('messages').innerHTML = '';
             }
         }
 
         // Setup Event Listeners
         function setupEventListeners() {
+            document.getElementById('settings-toggle').addEventListener('click', toggleSettings);
+
             // Save API keys on change
             ['gemini-key', 'openai-key', 'anthropic-key'].forEach(id => {
                 document.getElementById(id).addEventListener('change', saveAPIKeys);
@@ -616,6 +759,7 @@
 
             document.getElementById('clear-keys').addEventListener('click', clearAPIKeys);
             document.getElementById('reset-costs').addEventListener('click', resetCosts);
+            document.getElementById('clear-chat').addEventListener('click', clearChat);
             document.getElementById('since-date').addEventListener('change', updateCostDisplay);
             document.getElementById('chat-form').addEventListener('submit', handleSubmit);
 
@@ -651,6 +795,7 @@
             // Add user message
             addMessage('user', message);
             conversationHistory.push({ role: 'user', content: message });
+            saveChatHistory();
 
             // Clear input
             input.value = '';
@@ -665,14 +810,21 @@
                 const response = await callAPI(model.provider, modelId, apiKey, conversationHistory);
 
                 // Add assistant message
-                addMessage('assistant', response.content, {
+                const assistantMeta = {
                     model: model.name,
                     inputTokens: response.inputTokens,
                     outputTokens: response.outputTokens,
                     cost: response.cost
-                });
+                };
 
-                conversationHistory.push({ role: 'assistant', content: response.content });
+                addMessage('assistant', response.content, assistantMeta);
+
+                conversationHistory.push({
+                    role: 'assistant',
+                    content: response.content,
+                    meta: assistantMeta
+                });
+                saveChatHistory();
 
                 // Save usage
                 saveUsageData({
@@ -682,6 +834,12 @@
                     outputTokens: response.outputTokens,
                     cost: response.cost
                 });
+
+                // Update since date if this is the first usage
+                const metadata = JSON.parse(localStorage.getItem(METADATA_STORAGE) || '{}');
+                if (!metadata.costResetDate && loadUsageData().length === 1) {
+                    setupSinceDate();
+                }
 
                 updateCostDisplay();
 
@@ -779,7 +937,6 @@
         async function callAnthropicAPI(modelId, apiKey, history) {
             const url = 'https://api.anthropic.com/v1/messages';
 
-            // Convert history to Anthropic format (exclude system messages)
             const messages = history.map(msg => ({
                 role: msg.role,
                 content: msg.content
@@ -816,6 +973,44 @@
             return { content, inputTokens, outputTokens, cost };
         }
 
+        // Process content to protect math from markdown
+        function preprocessMath(text) {
+            const mathBlocks = [];
+            let processed = text;
+
+            // Extract display math ($$...$$)
+            processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+                mathBlocks.push({ display: true, math: math.trim() });
+                return `__MATH_BLOCK_${mathBlocks.length - 1}__`;
+            });
+
+            // Extract inline math ($...$)
+            processed = processed.replace(/\$([^\$\n]+?)\$/g, (match, math) => {
+                mathBlocks.push({ display: false, math: math.trim() });
+                return `__MATH_BLOCK_${mathBlocks.length - 1}__`;
+            });
+
+            return { processed, mathBlocks };
+        }
+
+        // Restore and render math
+        function renderMath(html, mathBlocks) {
+            let result = html;
+            mathBlocks.forEach((block, index) => {
+                const placeholder = `__MATH_BLOCK_${index}__`;
+                try {
+                    const rendered = katex.renderToString(block.math, {
+                        displayMode: block.display,
+                        throwOnError: false
+                    });
+                    result = result.replace(placeholder, rendered);
+                } catch (e) {
+                    result = result.replace(placeholder, block.display ? `$$${block.math}$$` : `$${block.math}$`);
+                }
+            });
+            return result;
+        }
+
         // Add Message to UI
         function addMessage(role, content, meta = {}) {
             const messagesDiv = document.getElementById('messages');
@@ -825,39 +1020,32 @@
             const metaHTML = meta.model ? `
                 <div class="message-meta">
                     <span>📊 ${meta.model}</span>
-                    ${meta.inputTokens !== undefined ? `<span>📥 ${meta.inputTokens.toLocaleString()} tokens</span>` : ''}
-                    ${meta.outputTokens !== undefined ? `<span>📤 ${meta.outputTokens.toLocaleString()} tokens</span>` : ''}
+                    ${meta.inputTokens !== undefined ? `<span>📥 ${meta.inputTokens.toLocaleString()}</span>` : ''}
+                    ${meta.outputTokens !== undefined ? `<span>📤 ${meta.outputTokens.toLocaleString()}</span>` : ''}
                     ${meta.cost !== undefined ? `<span>💵 $${meta.cost.toFixed(6)}</span>` : ''}
                 </div>
             ` : '';
 
+            // Process math before markdown
+            const { processed, mathBlocks } = preprocessMath(content);
+
+            // Render markdown
+            let html = marked.parse(processed);
+
+            // Restore and render math
+            html = renderMath(html, mathBlocks);
+
             messageDiv.innerHTML = `
-                <div class="message-header">
-                    <span class="message-role ${role}">${role === 'user' ? '👤 You' : '🤖 Assistant'}</span>
+                <div class="message-wrapper">
+                    <div class="message-bubble">${html}</div>
                     ${metaHTML}
                 </div>
-                <div class="message-content" id="content-${Date.now()}"></div>
             `;
 
             messagesDiv.appendChild(messageDiv);
 
-            // Render markdown
-            const contentDiv = messageDiv.querySelector('.message-content');
-            const html = marked.parse(content);
-            contentDiv.innerHTML = html;
-
-            // Render math
-            renderMathInElement(contentDiv, {
-                delimiters: [
-                    { left: '$$', right: '$$', display: true },
-                    { left: '$', right: '$', display: false },
-                    { left: '\\[', right: '\\]', display: true },
-                    { left: '\\(', right: '\\)', display: false }
-                ]
-            });
-
             // Highlight code
-            contentDiv.querySelectorAll('pre code').forEach(block => {
+            messageDiv.querySelectorAll('pre code').forEach(block => {
                 hljs.highlightElement(block);
             });
 
