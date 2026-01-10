@@ -517,6 +517,23 @@
         <div class="sidebar">
             <h2>🔑 BYOK Chat</h2>
 
+            <button id="new-chat-btn" class="btn"
+                style="width: 100%; margin-bottom: 16px; justify-content: center; background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent)); color: white; border: none;">
+                <span style="font-size: 1.1em; margin-right: 8px;">+</span> New Chat
+            </button>
+
+            <details id="chat-history-list" style="margin-bottom: 20px;">
+                <summary
+                    style="cursor: pointer; color: var(--text-secondary); font-size: 0.9rem; padding: 8px 0; list-style: none; display: flex; align-items: center; justify-content: space-between;">
+                    <span>📂 Past Chats</span>
+                    <span style="font-size: 0.8em;">▼</span>
+                </summary>
+                <div id="archives-container"
+                    style="max-height: 300px; overflow-y: auto; margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
+                    <!-- Archived chats will be populated here -->
+                </div>
+            </details>
+
             <!-- Settings Toggle -->
             <div class="settings-toggle" id="settings-toggle">
                 <span>⚙️ API Settings</span>
@@ -532,6 +549,12 @@
                 <div class="api-key-section">
                     <h3>🔷 Gemini API Key</h3>
                     <input type="password" id="gemini-key" placeholder="Enter Gemini API key">
+                    <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="gemini-search-grounding" style="width: auto; margin: 0;">
+                        <label for="gemini-search-grounding"
+                            style="font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">Enable Google
+                            Search Grounding</label>
+                    </div>
                 </div>
 
                 <div class="api-key-section">
@@ -605,18 +628,26 @@
 
         // Storage Keys
         const KEYS_STORAGE = 'llm_chat_api_keys';
+        const SETTINGS_STORAGE = 'llm_chat_settings';
+        const ARCHIVES_STORAGE = 'llm_chat_archives';
         const USAGE_STORAGE = 'llm_chat_usage';
         const HISTORY_STORAGE = 'llm_chat_history';
         const METADATA_STORAGE = 'llm_chat_metadata';
 
         // State
         let conversationHistory = [];
+        let inputHistory = [];
+        let historyIndex = -1;
+        let tempInput = '';
+        let currentSessionId = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadAPIKeys();
+            loadSettings();
             loadUsageData();
             loadChatHistory();
+            renderArchivesList();
             setupSinceDate();
             setupEventListeners();
             updateCostDisplay();
@@ -644,6 +675,20 @@
             document.getElementById('anthropic-key').value = keys.anthropic || '';
         }
 
+        // Load Settings
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem(SETTINGS_STORAGE) || '{}');
+            document.getElementById('gemini-search-grounding').checked = settings.geminiSearchGrounding || false;
+        }
+
+        // Save Settings
+        function saveSettings() {
+            const settings = {
+                geminiSearchGrounding: document.getElementById('gemini-search-grounding').checked
+            };
+            localStorage.setItem(SETTINGS_STORAGE, JSON.stringify(settings));
+        }
+
         // Save API Keys to localStorage
         function saveAPIKeys() {
             const keys = {
@@ -656,11 +701,13 @@
 
         // Clear API Keys
         function clearAPIKeys() {
-            if (confirm('Are you sure you want to clear all API keys?')) {
+            if (confirm('Are you sure you want to clear all API keys and settings?')) {
                 localStorage.removeItem(KEYS_STORAGE);
+                localStorage.removeItem(SETTINGS_STORAGE);
                 document.getElementById('gemini-key').value = '';
                 document.getElementById('openai-key').value = '';
                 document.getElementById('anthropic-key').value = '';
+                document.getElementById('gemini-search-grounding').checked = false;
             }
         }
 
@@ -724,6 +771,10 @@
 
         // Load Chat History
         function loadChatHistory() {
+            // Check if we have a current session ID stored
+            const meta = JSON.parse(localStorage.getItem(METADATA_STORAGE) || '{}');
+            currentSessionId = meta.currentSessionId || null;
+
             const history = localStorage.getItem(HISTORY_STORAGE);
             if (history) {
                 conversationHistory = JSON.parse(history);
@@ -737,25 +788,185 @@
         // Save Chat History
         function saveChatHistory() {
             localStorage.setItem(HISTORY_STORAGE, JSON.stringify(conversationHistory));
+
+            // Also save current session ID
+            const meta = JSON.parse(localStorage.getItem(METADATA_STORAGE) || '{}');
+            meta.currentSessionId = currentSessionId;
+            localStorage.setItem(METADATA_STORAGE, JSON.stringify(meta));
         }
 
-        // Clear Chat History
+        // Start New Chat
+        function startNewChat() {
+            // Archive current chat if it has messages
+            if (conversationHistory.length > 0) {
+                archiveCurrentSession();
+            }
+
+            // Clear current state
+            conversationHistory = [];
+            currentSessionId = Date.now().toString();
+            document.getElementById('messages').innerHTML = '';
+
+            // Clear persistent storage for current view
+            localStorage.removeItem(HISTORY_STORAGE);
+            saveChatHistory(); // Updates metadata with new session ID
+
+            // Render archives
+            renderArchivesList();
+        }
+
+        // Archive Current Session
+        function archiveCurrentSession() {
+            if (conversationHistory.length === 0) return;
+
+            const archives = JSON.parse(localStorage.getItem(ARCHIVES_STORAGE) || '{}');
+
+            // Define ID if none exists (legacy fallback)
+            const id = currentSessionId || Date.now().toString();
+
+            // Generate title from first user message
+            const firstUserMsg = conversationHistory.find(m => m.role === 'user');
+            const title = firstUserMsg
+                ? (firstUserMsg.content.slice(0, 30) + (firstUserMsg.content.length > 30 ? '...' : ''))
+                : 'Untitled Chat';
+
+            archives[id] = {
+                id: id,
+                title: title,
+                date: new Date().toISOString(),
+                history: conversationHistory
+            };
+
+            localStorage.setItem(ARCHIVES_STORAGE, JSON.stringify(archives));
+        }
+
+        // Load Archived Chat
+        function loadArchivedChat(id) {
+            // Archive current if valid
+            if (conversationHistory.length > 0) {
+                archiveCurrentSession();
+            }
+
+            const archives = JSON.parse(localStorage.getItem(ARCHIVES_STORAGE) || '{}');
+            const session = archives[id];
+
+            if (session) {
+                currentSessionId = id;
+                conversationHistory = session.history;
+
+                // Update persistent storage for current view
+                localStorage.setItem(HISTORY_STORAGE, JSON.stringify(conversationHistory));
+                saveChatHistory(); // Updates metadata
+
+                // Render UI
+                document.getElementById('messages').innerHTML = '';
+                conversationHistory.forEach(msg => {
+                    addMessage(msg.role, msg.content, msg.meta || {});
+                });
+
+                renderArchivesList();
+            }
+        }
+
+        // Delete Archived Chat
+        function deleteArchivedChat(id, event) {
+            event.stopPropagation();
+            if (confirm('Delete this chat history?')) {
+                const archives = JSON.parse(localStorage.getItem(ARCHIVES_STORAGE) || '{}');
+                delete archives[id];
+                localStorage.setItem(ARCHIVES_STORAGE, JSON.stringify(archives));
+                renderArchivesList();
+
+                // If we deleted the active session, start a new one
+                if (currentSessionId === id) {
+                    startNewChat();
+                }
+            }
+        }
+
+        // Render Archives List
+        function renderArchivesList() {
+            const container = document.getElementById('archives-container');
+            const archives = JSON.parse(localStorage.getItem(ARCHIVES_STORAGE) || '{}');
+
+            // Sort by date desc
+            const sessions = Object.values(archives).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = sessions.length ? '' : '<div style="padding: 8px; color: var(--text-secondary); font-size: 0.8rem; font-style: italic;">No stored history</div>';
+
+            sessions.forEach(session => {
+                const item = document.createElement('div');
+                const isCurrent = session.id === currentSessionId;
+
+                item.style.cssText = `
+                    padding: 8px;
+                    border-radius: 6px;
+                    background: ${isCurrent ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.05)'};
+                    border: 1px solid ${isCurrent ? 'var(--primary-accent)' : 'transparent'};
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    transition: all 0.2s ease;
+                `;
+
+                // Hover effect logic handled via CSS if possible, but inline here:
+                item.onmouseenter = () => { if (session.id !== currentSessionId) item.style.background = 'rgba(255,255,255,0.1)'; };
+                item.onmouseleave = () => { if (session.id !== currentSessionId) item.style.background = 'rgba(255,255,255,0.05)'; };
+                item.onclick = () => loadArchivedChat(session.id);
+
+                const dateStr = new Date(session.date).toLocaleDateString();
+
+                item.innerHTML = `
+                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem;">
+                        <span style="font-weight: 600;">${session.title}</span>
+                        <div style="font-size: 0.7rem; color: var(--text-secondary);">${dateStr}</div>
+                    </div>
+                `;
+
+                // Delete button
+                const delBtn = document.createElement('button');
+                delBtn.innerHTML = '×';
+                delBtn.style.cssText = `
+                    background: none; border: none; color: var(--text-secondary);
+                    font-size: 1.2rem; cursor: pointer; padding: 0 4px;
+                    margin-left: 8px;
+                `;
+                delBtn.onmouseenter = () => delBtn.style.color = '#ef4444';
+                delBtn.onmouseleave = () => delBtn.style.color = 'var(--text-secondary)';
+                delBtn.onclick = (e) => deleteArchivedChat(session.id, e);
+
+                item.appendChild(delBtn);
+                container.appendChild(item);
+            });
+        }
+
+        // Clear Chat History (Modified)
         function clearChat() {
-            if (confirm('Are you sure you want to clear the chat history?')) {
+            if (confirm('Are you sure you want to clear the CURRENT chat messages?')) {
                 conversationHistory = [];
                 localStorage.removeItem(HISTORY_STORAGE);
                 document.getElementById('messages').innerHTML = '';
+
+                // If it was an archived session, update the archive too to reflect empty state or remove it?
+                // For now, let's just clear the messages. User can "Reset" effectively.
+                if (currentSessionId) {
+                    archiveCurrentSession(); // Will save empty history
+                }
             }
         }
 
         // Setup Event Listeners
         function setupEventListeners() {
+            document.getElementById('new-chat-btn').addEventListener('click', startNewChat);
             document.getElementById('settings-toggle').addEventListener('click', toggleSettings);
 
             // Save API keys on change
             ['gemini-key', 'openai-key', 'anthropic-key'].forEach(id => {
                 document.getElementById(id).addEventListener('change', saveAPIKeys);
             });
+
+            document.getElementById('gemini-search-grounding').addEventListener('change', saveSettings);
 
             document.getElementById('clear-keys').addEventListener('click', clearAPIKeys);
             document.getElementById('reset-costs').addEventListener('click', resetCosts);
@@ -768,6 +979,46 @@
             textarea.addEventListener('input', () => {
                 textarea.style.height = 'auto';
                 textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+            });
+
+            // Handle keydown events
+            textarea.addEventListener('keydown', (e) => {
+                // Ctrl+Enter or Shift+Enter to send
+                if (e.key === 'Enter' && (e.ctrlKey || e.shiftKey)) {
+                    e.preventDefault();
+                    document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+                    return;
+                }
+
+                // History navigation with Arrow keys
+                if (e.key === 'ArrowUp') {
+                    if (historyIndex < inputHistory.length - 1) {
+                        if (historyIndex === -1) {
+                            tempInput = textarea.value;
+                        }
+                        historyIndex++;
+                        textarea.value = inputHistory[historyIndex];
+                        // Move cursor to end
+                        setTimeout(() => {
+                            textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+                        }, 0);
+                    }
+                    e.preventDefault();
+                } else if (e.key === 'ArrowDown') {
+                    if (historyIndex > -1) {
+                        historyIndex--;
+                        if (historyIndex === -1) {
+                            textarea.value = tempInput;
+                        } else {
+                            textarea.value = inputHistory[historyIndex];
+                        }
+                        // Move cursor to end
+                        setTimeout(() => {
+                            textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+                        }, 0);
+                    }
+                    e.preventDefault();
+                }
             });
         }
 
@@ -797,6 +1048,11 @@
             conversationHistory.push({ role: 'user', content: message });
             saveChatHistory();
 
+            // Add to input history
+            inputHistory.unshift(message);
+            historyIndex = -1;
+            tempInput = '';
+
             // Clear input
             input.value = '';
             input.style.height = 'auto';
@@ -807,7 +1063,10 @@
             sendBtn.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
 
             try {
-                const response = await callAPI(model.provider, modelId, apiKey, conversationHistory);
+                const options = {
+                    geminiSearchGrounding: document.getElementById('gemini-search-grounding').checked
+                };
+                const response = await callAPI(model.provider, modelId, apiKey, conversationHistory, options);
 
                 // Add assistant message
                 const assistantMeta = {
@@ -852,10 +1111,10 @@
         }
 
         // Call API based on provider
-        async function callAPI(provider, modelId, apiKey, history) {
+        async function callAPI(provider, modelId, apiKey, history, options = {}) {
             switch (provider) {
                 case 'gemini':
-                    return await callGeminiAPI(modelId, apiKey, history);
+                    return await callGeminiAPI(modelId, apiKey, history, options);
                 case 'openai':
                     return await callOpenAIAPI(modelId, apiKey, history);
                 case 'anthropic':
@@ -866,7 +1125,7 @@
         }
 
         // Gemini API
-        async function callGeminiAPI(modelId, apiKey, history) {
+        async function callGeminiAPI(modelId, apiKey, history, options) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
             const contents = history.map(msg => ({
@@ -874,10 +1133,17 @@
                 parts: [{ text: msg.content }]
             }));
 
+            const body = { contents };
+
+            // Add Search Grounding if enabled
+            if (options.geminiSearchGrounding) {
+                body.tools = [{ google_search: {} }];
+            }
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents })
+                body: JSON.stringify(body)
             });
 
             if (!response.ok) {
