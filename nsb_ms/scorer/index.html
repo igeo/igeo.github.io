@@ -84,9 +84,36 @@
     }
 
     function newMatch() {
-      if (confirm("Are you sure you want to start a new match? This will clear all current scores and logs.")) {
-        localStorage.removeItem('nsb_scorekeeper_state');
+      if (confirm("Are you sure you want to start a new match?")) {
+        var scoreA = document.getElementById("teamAscore").value;
+        var scoreB = document.getElementById("teamBscore").value;
+        var timestamp = formatTimestamp(new Date());
+        var finalLog = timestamp + " - Match Ended. Final Score: Team A: " + scoreA + " - Team B: " + scoreB + "<br>";
+        var separator = "<hr style='border-top: 3px solid #000; margin-top: 10px; margin-bottom: 10px;'>";
+        var currentLog = document.getElementById("log").innerHTML;
+        var newLog = separator + finalLog + currentLog;
+
+        const newState = {
+          teamAscore: 0,
+          teamBscore: 0,
+          halfSeconds: 480,
+          halfSecondsDisp: secondsInMinutes(480),
+          questionSeconds: 0,
+          isBonusTimer: false,
+          halfTimerRunning: false,
+          questionTimerRunning: false,
+          log: newLog,
+          clockColor: "white"
+        };
+        localStorage.setItem('nsb_scorekeeper_state', JSON.stringify(newState));
         location.reload();
+      }
+    }
+
+    function cleanLog() {
+      if (confirm("Are you sure you want to clear the log?")) {
+        document.getElementById("log").innerHTML = "";
+        saveState();
       }
     }
 
@@ -351,6 +378,10 @@
     anyone who does science bowl or quiz bowl...</p>
 
 
+  <div style="text-align:center;">
+    <button type="button" onclick="cleanLog();" style="height: auto; font-size: 1em; padding: 5px 10px;">Clear
+      Log</button>
+  </div>
   <p id="log">
   </p>
 
