@@ -98,12 +98,27 @@
       return disp;
     }
 
+    function formatTimestamp(date) {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      const HH = String(date.getHours()).padStart(2, '0');
+      const MM = String(date.getMinutes()).padStart(2, '0');
+      const SS = String(date.getSeconds()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd} ${HH}:${MM}:${SS}`;
+    }
+
     function addScore(team, amount) {
       var scoreElement = document.getElementById("team" + team + "score");
       scoreElement.value = parseInt(scoreElement.value) + parseInt(amount);
 
-      var logS = "Score for team " + team + " changed by " + amount + "<br>";
-      document.getElementById("log").innerHTML += logS;
+      const timestamp = formatTimestamp(new Date());
+      var logS = timestamp + " - Score for team " + team + " changed by " + amount + "<br>";
+
+      // Prepend the new log, keeping the newest at the top
+      var currentLog = document.getElementById("log").innerHTML;
+      document.getElementById("log").innerHTML = logS + currentLog;
+
       console.log(logS);
       saveState();
       window.scrollTo(0, 0);
