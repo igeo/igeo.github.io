@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
             margin: 0 auto;
             padding: 20px;
         }
+
         .image-gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -24,10 +26,12 @@
             border-radius: 4px;
             transition: background-color 0.3s;
         }
+
         .image-gallery.dragover {
             background-color: #e1e1e1;
             border: 2px dashed #999;
         }
+
         .image-item {
             position: relative;
             background: white;
@@ -36,17 +40,19 @@
             border-radius: 4px;
             cursor: move;
         }
+
         .image-item img {
             width: 100%;
             height: 150px;
             object-fit: contain;
             margin-bottom: 5px;
         }
+
         .image-item .remove-btn {
             position: absolute;
             top: 5px;
             right: 5px;
-            background: rgba(255,0,0,0.7);
+            background: rgba(255, 0, 0, 0.7);
             color: white;
             border: none;
             border-radius: 50%;
@@ -57,15 +63,18 @@
             align-items: center;
             justify-content: center;
         }
+
         .action-buttons {
             display: flex;
             gap: 10px;
             margin: 20px 0;
         }
+
         .preview {
             max-width: 100%;
             margin: 20px 0;
         }
+
         .image-gallery.empty {
             display: flex;
             align-items: center;
@@ -74,23 +83,29 @@
             cursor: pointer;
             min-height: 200px;
         }
+
         .image-gallery.empty .empty-message {
             color: #666;
             font-size: 1.1em;
         }
+
         .empty-message {
             display: none;
         }
+
         .image-gallery.empty .empty-message {
             display: block;
         }
+
         .slider-container {
             margin: 20px 0;
         }
+
         .slider-container label {
             display: block;
             margin-bottom: 5px;
         }
+
         .action-button {
             padding: 10px 20px;
             color: white;
@@ -100,37 +115,44 @@
             margin-top: 10px;
             transition: background-color 0.3s;
         }
+
         .action-button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
             opacity: 0.7;
         }
+
         #compressJpgBtn {
             background-color: #4CAF50;
         }
+
         #compressJpgBtn:hover:not(:disabled) {
             background-color: #45a049;
         }
+
         #generatePdfBtn {
             background-color: #2196F3;
         }
+
         #generatePdfBtn:hover:not(:disabled) {
             background-color: #1976D2;
         }
+
         .image-info {
             margin: 10px 0;
             color: #666;
         }
     </style>
 </head>
+
 <body>
     <h1>AoPE JPG Compressor</h1>
     <p>This web app takes one or more high resolution JPG images as input, down-sample them
         to lower resolution and compress them to a single PDF file that is suitable
         to submit online for homework.</p>
     <p>The default setting compresses a letter-size scan to
-         about 100 KB while keeping it readable. 
-         Adjust resolution and quality using the sliders as needed.
+        about 100 KB while keeping it readable.
+        Adjust resolution and quality using the sliders as needed.
     </p>
     <div id="imageGallery" class="image-gallery empty">
         <input type="file" id="fileInput" accept="image/jpeg" multiple style="display: none">
@@ -172,7 +194,7 @@
         const originalSizeSpan = document.getElementById('originalSize');
 
         let images = [];
-        
+
         // Initialize sortable gallery
         new Sortable(imageGallery, {
             animation: 150,
@@ -204,7 +226,7 @@
             e.preventDefault();
             e.stopPropagation();
             imageGallery.classList.remove('dragover');
-            
+
             const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'image/jpeg');
             if (files.length > 0) {
                 handleFiles(files);
@@ -232,14 +254,14 @@
         function handleFiles(files) {
             let loadedCount = 0;
             const totalFiles = files.length;
-            
+
             Array.from(files).forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const totalPixels = (img.width * img.height) / 1000000;
-                        
+
                         // Add image to collection
                         images.push({
                             name: file.name,
@@ -250,11 +272,11 @@
                         });
 
                         loadedCount++;
-                        
+
                         // Update gallery and button states
                         updateGallery();
                         updateButtonStates();
-                        
+
                         // Show controls and hide initial drop zone
                         imageControls.style.display = 'block';
                         imageGallery.classList.remove('empty');
@@ -263,10 +285,10 @@
                         const maxPixels = Math.max(...images.map(img => img.totalPixels));
                         pixelSlider.max = maxPixels;
                         pixelSlider.min = 0.4;
-                        
+
                         // Set default to 1M or image size if smaller
                         pixelSlider.value = Math.min(1, maxPixels);
-                        
+
                         updateAllImages();
                     };
                     img.src = e.target.result;
@@ -283,7 +305,7 @@
             images.forEach((img, index) => {
                 const div = document.createElement('div');
                 div.className = 'image-item';
-                
+
                 // Create thumbnail
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -291,10 +313,10 @@
                 canvas.width = 200;
                 canvas.height = 200 / aspectRatio;
                 ctx.drawImage(img.element, 0, 0, canvas.width, canvas.height);
-                
+
                 const thumbnail = document.createElement('img');
                 thumbnail.src = canvas.toDataURL('image/jpeg', quality);
-                
+
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-btn';
                 removeBtn.innerHTML = '×';
@@ -307,13 +329,13 @@
                         imageGallery.classList.add('empty');
                     }
                 };
-                
+
                 const fileName = document.createElement('div');
                 fileName.textContent = img.name;
                 fileName.style.fontSize = '12px';
                 fileName.style.overflow = 'hidden';
                 fileName.style.textOverflow = 'ellipsis';
-                
+
                 div.appendChild(thumbnail);
                 div.appendChild(removeBtn);
                 div.appendChild(fileName);
@@ -337,7 +359,7 @@
         function processImage(img, targetPixels, quality) {
             console.log('Processing image:', img);
             const aspectRatio = img.width / img.height;
-            
+
             // Calculate new dimensions maintaining aspect ratio
             let newWidth = Math.sqrt(targetPixels * aspectRatio);
             let newHeight = newWidth / aspectRatio;
@@ -349,7 +371,7 @@
             canvas.width = Math.round(newWidth);
             canvas.height = Math.round(newHeight);
             const ctx = canvas.getContext('2d');
-            
+
             // Draw image with smooth interpolation
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
@@ -368,11 +390,11 @@
 
             const targetPixels = parseFloat(pixelSlider.value) * 1000000;
             const quality = parseFloat(qualitySlider.value);
-            
+
             // Update display
             pixelCountSpan.textContent = parseFloat(pixelSlider.value).toFixed(2);
             qualityLevelSpan.textContent = updateQualityLevel(quality);
-            
+
             if (images.length === 1) {
                 originalSizeSpan.textContent = images[0].totalPixels.toFixed(2) + 'M';
             } else {
@@ -404,11 +426,11 @@
                 unit: 'pt',
                 format: 'letter'
             });
-            
+
             const pageWidth = 612; // 8.5 inches * 72 points per inch
             const pageHeight = 792; // 11 inches * 72 points per inch
             const margin = 36; // 0.5 inch margin
-            
+
             // Get images in the current display order
             const orderedImages = Array.from(imageGallery.children).map(div => {
                 const fileName = div.querySelector('div').textContent;
@@ -417,15 +439,15 @@
 
             for (let i = 0; i < orderedImages.length; i++) {
                 if (i > 0) pdf.addPage();
-                
+
                 const img = orderedImages[i];
                 const dataUrl = processImage(img, targetPixels, quality);
-                
+
                 // Calculate dimensions to fit within margins while maintaining aspect ratio
                 const maxWidth = pageWidth - 2 * margin;
                 const maxHeight = pageHeight - 2 * margin;
                 const imgAspectRatio = img.width / img.height;
-                
+
                 let finalWidth, finalHeight;
                 if (imgAspectRatio > maxWidth / maxHeight) {
                     finalWidth = maxWidth;
@@ -434,42 +456,73 @@
                     finalHeight = maxHeight;
                     finalWidth = maxHeight * imgAspectRatio;
                 }
-                
+
                 // Center the image on the page
                 const x = margin + (maxWidth - finalWidth) / 2;
                 const y = margin + (maxHeight - finalHeight) / 2;
-                
+
                 pdf.addImage(dataUrl, 'JPEG', x, y, finalWidth, finalHeight);
 
                 // Add clickable URL at the bottom of each page
                 const footerY = pageHeight - margin / 2;
                 pdf.setFontSize(10);
-                
+
                 // Calculate total width for centering
-                const aopeName = 'AoPE';
-                const urlText = 'https://aope.us/';
-                const aopeWidth = pdf.getTextWidth(aopeName);
-                const urlWidth = pdf.getTextWidth(urlText);
-                const spacing = 5; // Space between text and URL
-                const totalWidth = aopeWidth + spacing + urlWidth;
+                const part1 = "generated by ";
+                const part2 = "AoPE";
+                const part3 = " (";
+                const part4 = "https://aope.us/";
+                const part5 = ") ";
+                const part6 = "image2pdf compressor";
+
+                const w1 = pdf.getTextWidth(part1);
+                const w2 = pdf.getTextWidth(part2);
+                const w3 = pdf.getTextWidth(part3);
+                const w4 = pdf.getTextWidth(part4);
+                const w5 = pdf.getTextWidth(part5);
+                const w6 = pdf.getTextWidth(part6);
+
+                const totalWidth = w1 + w2 + w3 + w4 + w5 + w6;
                 const startX = (pageWidth - totalWidth) / 2;
-                
-                // Add AoPE text in Princeton orange
-                pdf.setTextColor(231, 117, 0); // Princeton orange #E77500
-                pdf.text(aopeName, startX, footerY);
-                
-                // Add URL in blue
-                pdf.setTextColor(0, 0, 238); // Blue color for hyperlink
-                pdf.textWithLink(urlText, startX + aopeWidth + spacing, footerY, { url: 'https://aope.us/' });
+                let currentX = startX;
+
+                // "generated by "
+                pdf.setTextColor(0, 0, 0); // Black
+                pdf.text(part1, currentX, footerY);
+                currentX += w1;
+
+                // "AoPE"
+                pdf.setTextColor(231, 117, 0); // Princeton orange
+                pdf.text(part2, currentX, footerY);
+                currentX += w2;
+
+                // " ("
+                pdf.setTextColor(0, 0, 0); // Black
+                pdf.text(part3, currentX, footerY);
+                currentX += w3;
+
+                // "https://aope.us/"
+                pdf.setTextColor(0, 0, 238); // Blue for link
+                pdf.textWithLink(part4, currentX, footerY, { url: 'https://aope.us/' });
+                currentX += w4;
+
+                // ") "
+                pdf.setTextColor(0, 0, 0); // Black
+                pdf.text(part5, currentX, footerY);
+                currentX += w5;
+
+                // "image2pdf compressor"
+                pdf.setTextColor(0, 0, 238); // Blue for link
+                pdf.textWithLink(part6, currentX, footerY, { url: 'https://igeo.github.io/compress_jpg.html' });
             }
-            
+
             // Save the PDF
             pdf.save('compressed_images.pdf');
         }
 
         // Set initial button states
         updateButtonStates();
-        
+
         generatePdfBtn.addEventListener('click', () => {
             if (images.length === 0) return;
             const targetPixels = parseFloat(pixelSlider.value) * 1000000;
@@ -478,4 +531,5 @@
         });
     </script>
 </body>
+
 </html>
