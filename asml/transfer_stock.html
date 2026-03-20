@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Stocks: EquatePlus to Fidelity</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --text-color: #1f2937;
+            --card-bg: #ffffff;
+            --primary-color: #10b981; /* Fidelity-like green */
+            --primary-light: #d1fae5;
+            --secondary-color: #3b82f6; 
+            --accent-color: #6366f1;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #111827;
+                --text-color: #f9fafb;
+                --card-bg: #1f2937;
+                --primary-color: #34d399;
+                --primary-light: rgba(16, 185, 129, 0.2);
+                --border-color: #374151;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        /* Connecting line */
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 2rem;
+            bottom: 2rem;
+            width: 4px;
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .step-card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .step-card:nth-child(1) { animation-delay: 0.2s; }
+        .step-card:nth-child(2) { animation-delay: 0.4s; }
+        .step-card:nth-child(3) { animation-delay: 0.6s; }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .step-number {
+            position: absolute;
+            left: -3rem; /* Aligns over the timeline line */
+            top: 1.5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            box-shadow: 0 0 0 4px var(--bg-color);
+            z-index: 10;
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .step-icon {
+            font-size: 1.75rem;
+        }
+
+        .step-content {
+            font-size: 1.05rem;
+            color: var(--text-color);
+            opacity: 0.9;
+        }
+
+        .step-content ul {
+            list-style-type: none;
+            margin-top: 1rem;
+        }
+
+        .step-content li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-content li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .data-box {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
+        .data-row {
+            display: flex;
+            margin-bottom: 0.5rem;
+            align-items: baseline;
+        }
+
+        .data-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .data-label {
+            font-weight: 600;
+            width: 140px;
+            color: var(--text-color);
+            opacity: 0.8;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .data-value {
+            color: var(--primary-color);
+            font-weight: bold;
+            user-select: all; /* Easy copying */
+        }
+        
+        .badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .timeline { padding-left: 0; }
+            .timeline::before { display: none; }
+            .step-number {
+                position: static;
+                margin-bottom: 1rem;
+                box-shadow: none;
+            }
+            .data-row {
+                flex-direction: column;
+            }
+            .data-label {
+                width: auto;
+                margin-bottom: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Transfer Stocks to Fidelity</h1>
+            <p class="subtitle">
+                EquatePlus trading tools can be limited and costly. Transfer your stocks to a brokerage like Fidelity to access advanced trading tools, lower your costs, and retain your cost basis. Follow these simple steps.
+            </p>
+        </header>
+
+        <div class="timeline">
+            
+            <!-- Step 1 -->
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h2 class="step-title">
+                    <span class="step-icon">🏦</span>
+                    Open a Fidelity Account
+                </h2>
+                <div class="step-content">
+                    <p>If you don't already have one, the first step is to open a Fidelity Brokerage account.</p>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h2 class="step-title">
+                    <span class="step-icon">🔗</span>
+                    Add Fidelity to EquatePlus
+                </h2>
+                <div class="step-content">
+                    <p>Log in to your <strong>EquatePlus</strong> account and link your new Fidelity brokerage account.</p>
+                    <ul>
+                        <li>Go to <strong>EquatePlus.com</strong> and log in.</li>
+                        <li>Click on the <strong>User Icon</strong> (top right).</li>
+                        <li>Navigate to <strong>Financial Details</strong> &gt; <strong>Brokerage account</strong>.</li>
+                        <li>Click on <strong>Add new brokerage account</strong>.</li>
+                    </ul>
+
+                    <div class="data-box">
+                        <div class="data-row">
+                            <span class="data-label">DTC Code:</span>
+                            <span class="data-value">0226</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Email:</span>
+                            <span class="data-value">DTCREC@FMR.COM</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">SWIFT Code:</span>
+                            <span class="data-value">FIDQUS3DFXXX</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h2 class="step-title">
+                    <span class="step-icon">✈️</span>
+                    Initiate Transfer
+                </h2>
+                <div class="step-content">
+                    <p>Once the account is added, you can proceed to transfer your stock lots.</p>
+                    <ul>
+                        <li>Go to <strong>Transact</strong> &gt; <strong>Transfer</strong> from the main menu.</li>
+                        <li>Select the specific lot of stock you wish to transfer.</li>
+                        <li>Submit your request.</li>
+                    </ul>
+                    <div class="badge">Settlement typically takes ~1 week</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
