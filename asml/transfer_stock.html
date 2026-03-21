@@ -248,6 +248,25 @@
                 margin-bottom: 0.25rem;
             }
         }
+        .warning-alert {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+            font-size: 1.05rem;
+            box-shadow: var(--shadow-sm);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .warning-alert {
+                background-color: rgba(239, 68, 68, 0.1);
+                color: #fca5a5;
+                border-left-color: #ef4444;
+            }
+        }
     </style>
 </head>
 <body>
@@ -259,6 +278,10 @@
                 EquatePlus trading tools can be limited and costly. Transfer your stocks to a brokerage like Fidelity to access advanced trading tools, lower your costs, and retain your cost basis. Follow these simple steps.
             </p>
         </header>
+
+        <div class="warning-alert">
+            <strong>⚠️ Important Warning:</strong> If you transfer an ESPP lot within 1 year of its purchase date, you might not receive the 20% bonus for holding more than one year. Please verify your lot purchase dates before transferring.
+        </div>
 
         <div class="timeline">
             
