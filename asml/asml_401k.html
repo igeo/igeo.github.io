@@ -58,6 +58,9 @@
         .q-more { font-size: .8rem; margin-top: 6px; opacity: .9; }
         .q-arrow { margin-left: auto; align-self: center; font-size: 1.6rem; color: var(--primary); }
         h2[id] { scroll-margin-top: 1rem; }
+        .workaround { border: 2px solid var(--warn-border); background: var(--warn-bg); font-size: 1.05rem; }
+        .q-tip { color: var(--warn-text, #b45309); }
+        @media (prefers-color-scheme: dark) { .q-tip { color: #fbbf24; } }
         footer { color: var(--muted); font-size: .85rem; margin-top: 2rem; }
         a { color: var(--primary); }
     </style>
@@ -91,7 +94,7 @@
         </a>
         <a class="q-row" href="#item2"><div class="q-ico">🧾</div><div><b>Almost all pay counts</b><span>Salary, holiday, sick, bonus (STI), patent award, ESPP bonus premium</span></div><div class="q-arrow">&rsaquo;</div></a>
         <a class="q-row" href="#item3"><div class="q-ico">🏃</div><div><b>Hit your limit early? Relax</b><span>Match keeps coming while deferral stays 6%+. Don't lower it!</span></div><div class="q-arrow">&rsaquo;</div></a>
-        <a class="q-row" href="#item4"><div class="q-ico">🚧</div><div><b>Match capped by IRS pay limit</b><span>2027: $375,000 &rarr; max match about $16,875/yr (projected)</span></div><div class="q-arrow">&rsaquo;</div></a>
+        <a class="q-row" href="#item4"><div class="q-ico">🚧</div><div><b>Match capped by IRS pay limit</b><span>2027: $375,000 &rarr; max match about $16,875/yr (projected).<br><strong class="q-tip">💡 Hit the limit? There may be a workaround, ask the author!</strong></span></div><div class="q-arrow">&rsaquo;</div></a>
         <a class="q-row" href="#item5"><div class="q-ico">🚪</div><div><b>Mega backdoor Roth</b><span>After-tax contributions, convert to Roth. Total cap $75,000 in 2027 (projected). Keep it modest.</span></div><div class="q-arrow">&rsaquo;</div></a>
         <a class="q-row" href="#item6"><div class="q-ico">🎂</div><div><b>Age 50+? Catch-up bonus</b><span>Separate bucket: $8,000 extra (2026); Roth only if prior-year pay over $150k</span></div><div class="q-arrow">&rsaquo;</div></a>
         <a class="q-row q-warn" href="#item1"><div class="q-ico">⚠️</div><div><b>Match is yours immediately</b><span>ASML match is 100% vested. Early withdrawal = 10% penalty + tax, but you still come out ahead.</span></div><div class="q-arrow">&rsaquo;</div></a>
@@ -131,7 +134,7 @@
             <tr><td>2027 (projected, IRS not yet final)</td><td>$375,000</td><td>$16,875</td></tr>
         </table>
         <p>So the most match you can receive is roughly <strong>$16,875 a year</strong>, however much you earn above the limit.</p>
-        <p>If your contributions are restricted by the IRS compensation limit, there may be a workaround, especially new in 2027. Talk to the author of this page for help finding out.</p>
+        <div class="big workaround">💡 <strong>Hit the income limit? There may be a workaround</strong>, especially new in 2027. Talk to the author of this page to find out.</div>
     </div>
 
     <div class="card">
